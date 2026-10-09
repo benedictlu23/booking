@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleController extends Controller
@@ -56,7 +57,7 @@ class GoogleController extends Controller
                 'email' => $googleUser->getEmail(),
                 'google_id' => $googleUser->getId(),
                 'avatar' => $googleUser->getAvatar(),
-                'password' => \Illuminate\Support\Str::random(32),
+                'password' => Str::random(32),
                 'role' => 'customer',
                 'email_verified_at' => now(),
             ]);

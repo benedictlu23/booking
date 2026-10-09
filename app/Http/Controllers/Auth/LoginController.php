@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class LoginController extends Controller
 {
-    public function create(): \Illuminate\View\View
+    public function create(): View
     {
         return view('auth.login');
     }
@@ -47,10 +49,14 @@ class LoginController extends Controller
         return redirect('/');
     }
 
-    private function redirectTo(\App\Models\User $user): string
+    private function redirectTo(User $user): string
     {
         if ($user->isAdmin() || $user->isDeskStaff()) {
             return route('admin.dashboard');
+        }
+
+        if ($user->isHousekeeper()) {
+            return route('housekeeper.dashboard');
         }
 
         return route('dashboard');

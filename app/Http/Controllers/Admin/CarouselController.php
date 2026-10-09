@@ -6,17 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Carousel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class CarouselController extends Controller
 {
-    public function index(): \Illuminate\View\View
+    public function index(): View
     {
         $carousels = Carousel::orderBy('sort_order')->get();
 
         return view('admin.carousels.index', compact('carousels'));
     }
 
-    public function create(): \Illuminate\View\View
+    public function create(): View
     {
         return view('admin.carousels.create');
     }
@@ -42,7 +43,7 @@ class CarouselController extends Controller
         return redirect()->route('admin.carousels.index')->with('success', 'Carousel slide added.');
     }
 
-    public function edit(Carousel $carousel): \Illuminate\View\View
+    public function edit(Carousel $carousel): View
     {
         return view('admin.carousels.edit', compact('carousel'));
     }

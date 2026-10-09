@@ -6,13 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Amenity;
 use App\Models\Room;
 use App\Models\RoomCategory;
+use App\Models\RoomPhoto;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class RoomController extends Controller
 {
-    public function index(): \Illuminate\View\View
+    public function index(): View
     {
         $rooms = Room::with(['category', 'bookings'])
             ->orderBy('category_id')
@@ -22,7 +24,7 @@ class RoomController extends Controller
         return view('admin.rooms.index', compact('rooms'));
     }
 
-    public function create(): \Illuminate\View\View
+    public function create(): View
     {
         $categories = RoomCategory::where('is_active', true)->get();
         $amenities = Amenity::orderBy('name')->get();
@@ -43,11 +45,11 @@ class RoomController extends Controller
             'pet_fee' => ['nullable', 'numeric', 'min:0'],
             'base_price' => ['required', 'numeric', 'min:0'],
             'floor_number' => ['nullable', 'integer'],
-            'status' => ['required', 'in:available,occupied,maintenance,housekeeping,blocked'],
+            'status' => ['required', 'in:available,occupied,maintenance,housekeeping,blocked,out_of_service'],
             'booking_type' => ['required', 'in:overnight,day_pass,both'],
             'is_active' => ['boolean'],
             'amenities' => ['nullable', 'array'],
-            'amenities.*' => ['exists:amenities,id'],
+            'amenities.*' => ['exists:room_amenities,id'],
             'photos' => ['nullable', 'array'],
             'photos.*' => ['image', 'max:5120'],
         ]);
@@ -59,28 +61,31 @@ class RoomController extends Controller
         }
 
         if ($request->hasFile('photos')) {
+            $gallery = [];
             foreach ($request->file('photos') as $index => $photo) {
                 $path = $photo->store('rooms/'.$room->id, 'public');
+                $gallery[] = $path;
                 $room->photos()->create([
                     'path' => $path,
                     'sort_order' => $index,
                     'is_cover' => $index === 0,
                 ]);
             }
+            $room->update(['gallery' => $gallery]);
         }
 
         return redirect()->route('admin.rooms.index')
             ->with('success', "Room {$room->room_number} created successfully.");
     }
 
-    public function show(Room $room): \Illuminate\View\View
+    public function show(Room $room): View
     {
         $room->load(['category', 'amenities', 'photos', 'bookings' => fn ($q) => $q->latest()->take(10)]);
 
         return view('admin.rooms.show', compact('room'));
     }
 
-    public function edit(Room $room): \Illuminate\View\View
+    public function edit(Room $room): View
     {
         $categories = RoomCategory::where('is_active', true)->get();
         $amenities = Amenity::orderBy('name')->get();
@@ -102,29 +107,43 @@ class RoomController extends Controller
             'pet_fee' => ['nullable', 'numeric', 'min:0'],
             'base_price' => ['required', 'numeric', 'min:0'],
             'floor_number' => ['nullable', 'integer'],
-            'status' => ['required', 'in:available,occupied,maintenance,housekeeping,blocked'],
+            'status' => ['required', 'in:available,occupied,maintenance,housekeeping,blocked,out_of_service'],
             'booking_type' => ['required', 'in:overnight,day_pass,both'],
             'is_active' => ['boolean'],
             'amenities' => ['nullable', 'array'],
-            'amenities.*' => ['exists:amenities,id'],
+            'amenities.*' => ['exists:room_amenities,id'],
         ]);
 
         $room->update($validated);
         $room->amenities()->sync($request->amenities ?? []);
 
         if ($request->hasFile('photos')) {
+            $gallery = $room->gallery ?? [];
             foreach ($request->file('photos') as $index => $photo) {
                 $path = $photo->store('rooms/'.$room->id, 'public');
+                $gallery[] = $path;
                 $room->photos()->create([
                     'path' => $path,
                     'sort_order' => $room->photos()->count() + $index,
                     'is_cover' => $room->photos()->count() === 0 && $index === 0,
                 ]);
             }
+            $room->update(['gallery' => $gallery]);
         }
 
         return redirect()->route('admin.rooms.show', $room)
-            ->with('success', "Room updated successfully.");
+            ->with('success', 'Room updated successfully.');
+    }
+
+    public function quickStatus(Request $request, Room $room): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:available,occupied,maintenance,housekeeping,blocked,out_of_service'],
+        ]);
+
+        $room->update(['status' => $validated['status']]);
+
+        return back()->with('success', "Room {$room->room_number} status updated to {$validated['status']}.");
     }
 
     public function destroy(Room $room): RedirectResponse
@@ -133,5 +152,23 @@ class RoomController extends Controller
 
         return redirect()->route('admin.rooms.index')
             ->with('success', "Room {$room->room_number} deleted.");
+    }
+
+    public function destroyPhoto(Room $room, RoomPhoto $photo): RedirectResponse
+    {
+        if ($photo->room_id !== $room->id) {
+            abort(404);
+        }
+
+        // Remove from storage
+        Storage::disk('public')->delete($photo->path);
+
+        // Remove path from gallery JSON column if present
+        $gallery = array_values(array_filter($room->gallery ?? [], fn ($p) => $p !== $photo->path));
+        $room->update(['gallery' => $gallery]);
+
+        $photo->delete();
+
+        return back()->with('success', 'Photo removed successfully.');
     }
 }

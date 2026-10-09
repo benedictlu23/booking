@@ -320,22 +320,28 @@
             const lat = {{ $resortLat }};
             const lng = {{ $resortLng }};
             const map = L.map('resort-map', { zoomControl: true }).setView([lat, lng], 15);
+            const logoUrl = @json(asset('storage/assets/AIR-LOGO.png'));
+            const resortAddress = @json($resortAddress);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
             const icon = L.divIcon({
-                html: `<div style="background:#059669;width:40px;height:40px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-                    <span style="transform:rotate(45deg);font-size:18px;">🌿</span>
-                </div>`,
+                html: `
+                    <div style="background:#059669;width:40px;height:40px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+                        <div style="transform:rotate(45deg);width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+                            <img src="${logoUrl}" alt="Agro-Inland Resort" style="width:100%;height:100%;object-fit:cover;display:block;">
+                        </div>
+                    </div>
+                `,
                 iconSize: [40, 40],
                 iconAnchor: [20, 40],
             });
 
             L.marker([lat, lng], { icon })
                 .addTo(map)
-                .bindPopup('<strong>Agro-Inland Resort</strong><br>{{ $resortAddress }}')
+                .bindPopup('<strong>Agro-Inland Resort</strong><br>' + resortAddress)
                 .openPopup();
         });
     </script>

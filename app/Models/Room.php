@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'category_id', 'room_number', 'name', 'description',
+    'category_id', 'room_number', 'name', 'description', 'gallery',
     'capacity_adults', 'capacity_children', 'allows_pets', 'pet_fee',
     'base_price', 'floor_number', 'status', 'booking_type', 'is_active',
 ])]
@@ -21,9 +21,12 @@ class Room extends Model
     /** @use HasFactory<RoomFactory> */
     use HasFactory, SoftDeletes;
 
+    protected $table = 'rooms';
+
     protected function casts(): array
     {
         return [
+            'gallery' => 'array',
             'allows_pets' => 'boolean',
             'is_active' => 'boolean',
             'base_price' => 'decimal:2',
@@ -40,7 +43,7 @@ class Room extends Model
 
     public function amenities(): BelongsToMany
     {
-        return $this->belongsToMany(Amenity::class, 'room_amenities');
+        return $this->belongsToMany(Amenity::class, 'room_room_amenities', 'room_id', 'amenity_id');
     }
 
     public function photos(): HasMany
@@ -66,15 +69,15 @@ class Room extends Model
 
     public function isAvailableFor(\DateTimeInterface $checkIn, \DateTimeInterface $checkOut): bool
     {
+        if (! $this->is_active || in_array($this->status, ['maintenance', 'out_of_service', 'blocked'])) {
+            return false;
+        }
+
         return ! $this->bookings()
             ->whereNotIn('status', ['cancelled', 'no_show'])
             ->where(function ($query) use ($checkIn, $checkOut) {
-                $query->whereBetween('check_in', [$checkIn, $checkOut])
-                    ->orWhereBetween('check_out', [$checkIn, $checkOut])
-                    ->orWhere(function ($q) use ($checkIn, $checkOut) {
-                        $q->where('check_in', '<=', $checkIn)
-                            ->where('check_out', '>=', $checkOut);
-                    });
+                $query->where('check_in', '<', $checkOut)
+                    ->where('check_out', '>', $checkIn);
             })
             ->exists();
     }

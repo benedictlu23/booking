@@ -25,6 +25,11 @@ class BookingCancelled implements ShouldBroadcastNow
         ];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'BookingCancelled';
+    }
+
     /**
      * @return array<string, mixed>
      */

@@ -102,10 +102,69 @@
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h3 class="font-bold text-stone-900 mb-2">Add More Photos</h3>
-                <p class="text-xs text-stone-400 mb-3">Current: {{ $room->photos->count() }} photo(s)</p>
-                <input type="file" name="photos[]" multiple accept="image/*"
-                       class="w-full text-sm text-stone-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="font-bold text-stone-900">Room Photos</h3>
+                        <p class="text-xs text-stone-500 mt-0.5">Manage existing photos or add new ones. Click the red ✕ or "Remove" button to delete any photo.</p>
+                    </div>
+                    @if($room->photos->isNotEmpty())
+                        <span class="px-2.5 py-1 bg-stone-100 text-stone-700 rounded-lg text-xs font-bold">
+                            {{ $room->photos->count() }} {{ Str::plural('photo', $room->photos->count()) }}
+                        </span>
+                    @endif
+                </div>
+
+                {{-- Existing photos --}}
+                @if($room->photos->isNotEmpty())
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 mb-6">
+                        @foreach($room->photos as $photo)
+                            <div class="relative bg-stone-50 rounded-2xl p-2 border border-stone-200 flex flex-col items-center shadow-xs hover:shadow-md transition-shadow">
+                                <div class="relative w-full h-24 rounded-xl overflow-hidden bg-stone-200">
+                                    <img src="{{ asset('storage/'.$photo->path) }}" alt="Room photo"
+                                         class="w-full h-full object-cover">
+
+                                    {{-- Persistent, high-contrast Red ✕ Badge Button (always visible) --}}
+                                    <button type="button"
+                                            onclick="if(confirm('Are you sure you want to remove this photo?')) document.getElementById('del-photo-{{ $photo->id }}').submit()"
+                                            title="Remove this photo"
+                                            class="absolute top-1.5 right-1.5 w-7 h-7 bg-red-600 hover:bg-red-700 active:scale-95 text-white rounded-full text-xs font-black flex items-center justify-center shadow-md ring-2 ring-white cursor-pointer transition-transform hover:scale-110 z-10">
+                                        ✕
+                                    </button>
+
+                                    @if($photo->is_cover)
+                                        <span class="absolute bottom-1.5 left-1.5 px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded-full shadow">
+                                            Cover
+                                        </span>
+                                    @endif
+                                </div>
+
+                                {{-- Explicit Text Action Button --}}
+                                <button type="button"
+                                        onclick="if(confirm('Are you sure you want to remove this photo?')) document.getElementById('del-photo-{{ $photo->id }}').submit()"
+                                        class="w-full mt-2 py-1 text-[11px] font-bold text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                                    <span>✕</span>
+                                    <span>Remove</span>
+                                </button>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="p-6 mb-6 rounded-2xl bg-stone-50 border border-dashed border-stone-200 text-center text-xs text-stone-400">
+                        📷 No photos uploaded for this room yet. Add your first photo below!
+                    </div>
+                @endif
+
+                {{-- Upload new photos --}}
+                <div class="p-4 bg-stone-50/70 border border-stone-200 rounded-2xl">
+                    <label class="block text-xs font-bold text-stone-800 uppercase tracking-wider mb-1.5">
+                        ➕ Upload New Photos
+                    </label>
+                    <input type="file" name="photos[]" multiple accept="image/*"
+                           class="w-full text-sm text-stone-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer cursor-pointer">
+                    <p class="text-[11px] text-stone-400 mt-2">
+                        Supported formats: JPG, PNG, WEBP, AVIF. You can select multiple images at once.
+                    </p>
+                </div>
             </div>
 
             @if($errors->any())
@@ -121,5 +180,16 @@
                 <a href="{{ route('admin.rooms.show', $room) }}" class="px-6 py-3 border border-stone-200 text-stone-600 rounded-xl text-sm hover:bg-stone-50 transition-colors">Cancel</a>
             </div>
         </form>
+
+        {{-- Standalone photo delete forms (outside the main form so they don't nest) --}}
+        @foreach($room->photos as $photo)
+            <form id="del-photo-{{ $photo->id }}"
+                  method="POST"
+                  action="{{ route('admin.rooms.photos.destroy', [$room, $photo]) }}"
+                  style="display:none">
+                @csrf
+                @method('DELETE')
+            </form>
+        @endforeach
     </div>
 </x-layouts.admin>

@@ -52,9 +52,14 @@ class User extends Authenticatable
         return $this->role === 'customer';
     }
 
+    public function isHousekeeper(): bool
+    {
+        return $this->role === 'housekeeper';
+    }
+
     public function isStaff(): bool
     {
-        return in_array($this->role, ['admin', 'desk_staff']);
+        return in_array($this->role, ['admin', 'desk_staff', 'housekeeper']);
     }
 
     public function bookings(): HasMany

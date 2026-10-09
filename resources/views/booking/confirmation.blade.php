@@ -53,7 +53,13 @@
                         <div class="text-right">
                             <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Guests</p>
                             <p class="font-bold text-stone-900">
-                                {{ $booking->adults }} Adults@if($booking->children > 0), {{ $booking->children }} Children@endif@if($booking->pets > 0) 🐾{{ $booking->pets }}@endif
+                                {{ $booking->adults }} {{ Str::plural('Adult', $booking->adults) }}
+                                @if($booking->children > 0)
+                                    , {{ $booking->children }} {{ Str::plural('Child', $booking->children) }}
+                                @endif
+                                @if($booking->pets > 0)
+                                    , 🐾 {{ $booking->pets }} {{ Str::plural('Pet', $booking->pets) }}
+                                @endif
                             </p>
                         </div>
                     </div>
@@ -74,7 +80,7 @@
                             <div class="space-y-2">
                                 @foreach($booking->addons as $addon)
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-stone-600">{{ $addon->addonService?->name }} × {{ $addon->quantity }}</span>
+                                        <span class="text-stone-600">{{ $addon->item_name ?? $addon->addonService?->name ?? 'Custom Service' }} × {{ $addon->quantity }}</span>
                                         <span class="font-medium text-stone-900">₱{{ number_format($addon->subtotal, 2) }}</span>
                                     </div>
                                 @endforeach
@@ -110,8 +116,65 @@
                             <span class="text-stone-900">Total Amount Due</span>
                             <span class="text-emerald-600">₱{{ number_format($booking->total_price, 2) }}</span>
                         </div>
-                        <p class="text-xs text-stone-400 text-center">Payment is collected upon check-in at the resort.</p>
+                        <div class="flex justify-between text-xs pt-1">
+                            <span class="text-stone-500">Payment Status:</span>
+                            <span class="font-bold uppercase {{ $booking->payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600' }}">{{ $booking->payment_status }}</span>
+                        </div>
                     </div>
+
+                    {{-- Manual Payment Flow & Proof Upload --}}
+                    @if($booking->payment_proof)
+                        <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">🧾</span>
+                                <div>
+                                    <p class="font-bold text-emerald-900 text-sm">Payment Proof Submitted</p>
+                                    <p class="text-xs text-emerald-700">Method: <span class="capitalize">{{ $booking->payment_method }}</span> · Our staff is reviewing your payment.</p>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="p-5 bg-stone-50 rounded-2xl border border-stone-200 space-y-3" x-data="{ method: 'gcash' }">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-stone-900 text-sm">💳 Pay Online / Manual Transfer (Optional)</h3>
+                                <span class="text-xs text-stone-400">or pay at check-in</span>
+                            </div>
+                            <p class="text-xs text-stone-600">Upload your proof of payment (screenshot/receipt) to confirm your booking immediately.</p>
+
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="p-2.5 bg-white rounded-xl border border-stone-200">
+                                    <p class="font-bold text-stone-900">GCash</p>
+                                    <p class="text-stone-500">0912-345-6789</p>
+                                    <p class="text-stone-400">Agro-Inland Resort</p>
+                                </div>
+                                <div class="p-2.5 bg-white rounded-xl border border-stone-200">
+                                    <p class="font-bold text-stone-900">BDO Unibank</p>
+                                    <p class="text-stone-500">0012-3456-7890</p>
+                                    <p class="text-stone-400">Agro-Inland Corp.</p>
+                                </div>
+                            </div>
+
+                            <form method="POST" action="{{ route('booking.payment-proof', $booking) }}" enctype="multipart/form-data" class="space-y-3 pt-2">
+                                @csrf
+                                <div>
+                                    <label class="block text-xs font-semibold text-stone-600 mb-1">Payment Method</label>
+                                    <select name="payment_method" x-model="method" class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        <option value="gcash">GCash</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="cash">Cash on Arrival</option>
+                                    </select>
+                                </div>
+                                <div x-show="method !== 'cash'">
+                                    <label class="block text-xs font-semibold text-stone-600 mb-1">Proof of Payment Image</label>
+                                    <input type="file" name="payment_proof" accept="image/*"
+                                           class="w-full text-xs text-stone-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
+                                </div>
+                                <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm">
+                                    Submit Payment Proof
+                                </button>
+                            </form>
+                        </div>
+                    @endif
                 </div>
             </div>
 

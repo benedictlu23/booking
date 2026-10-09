@@ -18,31 +18,89 @@
                 {{-- Left: Room Details --}}
                 <div class="lg:col-span-2 space-y-6">
 
-                    {{-- Photo Gallery --}}
-                    <div x-data="{ active: 0 }" class="rounded-3xl overflow-hidden bg-stone-200 aspect-video">
-                        @if($room->photos->isNotEmpty())
-                            <div class="relative h-full">
-                                @foreach($room->photos as $index => $photo)
-                                    <img x-show="active === {{ $index }}"
-                                         x-transition:enter="transition-opacity duration-500"
-                                         x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                                         src="{{ asset('storage/'.$photo->path) }}"
-                                         alt="{{ $photo->caption ?? $room->name }}"
-                                         class="absolute inset-0 w-full h-full object-cover">
-                                @endforeach
-                                @if($room->photos->count() > 1)
-                                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                                        @foreach($room->photos as $index => $photo)
-                                            <button @click="active = {{ $index }}"
-                                                    :class="active === {{ $index }} ? 'bg-white w-6' : 'bg-white/50 w-2'"
-                                                    class="h-2 rounded-full transition-all duration-300"></button>
-                                        @endforeach
+                    {{-- Photo Gallery Tour --}}
+                    @php
+                        $galleryImages = collect();
+                        if ($room->photos->isNotEmpty()) {
+                            foreach($room->photos as $p) {
+                                $galleryImages->push(['url' => asset('storage/'.$p->path), 'caption' => $p->caption ?? $room->name]);
+                            }
+                        }
+                        if (!empty($room->gallery) && is_array($room->gallery)) {
+                            foreach($room->gallery as $gPath) {
+                                $galleryImages->push(['url' => asset('storage/'.$gPath), 'caption' => $room->name]);
+                            }
+                        }
+                    @endphp
+
+                    <div x-data="{ active: 0, total: {{ $galleryImages->count() }}, modalOpen: false }" class="space-y-3">
+                        <div class="relative rounded-3xl overflow-hidden bg-stone-900 aspect-video group">
+                            @if($galleryImages->isNotEmpty())
+                                <div class="relative h-full w-full">
+                                    @foreach($galleryImages as $index => $photo)
+                                        <div x-show="active === {{ $index }}"
+                                             x-transition:enter="transition-opacity duration-300"
+                                             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                             class="absolute inset-0">
+                                            <img src="{{ $photo['url'] }}"
+                                                 alt="{{ $photo['caption'] }}"
+                                                 @click="modalOpen = true"
+                                                 class="w-full h-full object-cover cursor-pointer">
+                                        </div>
+                                    @endforeach
+
+                                    {{-- Navigation Arrows --}}
+                                    @if($galleryImages->count() > 1)
+                                        <button type="button" @click="active = (active === 0 ? total - 1 : active - 1)"
+                                                class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-colors">
+                                            ‹
+                                        </button>
+                                        <button type="button" @click="active = (active === total - 1 ? 0 : active + 1)"
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-colors">
+                                            ›
+                                        </button>
+                                    @endif
+
+                                    {{-- Badge / Counter --}}
+                                    <div class="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold flex items-center gap-2">
+                                        <span>📷 <span x-text="active + 1"></span> / {{ $galleryImages->count() }}</span>
+                                        <button type="button" @click="modalOpen = true" class="hover:underline">Fullscreen ⛶</button>
                                     </div>
-                                @endif
+                                </div>
+                            @else
+                                <div class="h-full flex items-center justify-center text-6xl">🌿</div>
+                            @endif
+                        </div>
+
+                        {{-- Thumbnail Tour Strip --}}
+                        @if($galleryImages->count() > 1)
+                            <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                                @foreach($galleryImages as $index => $photo)
+                                    <button type="button" @click="active = {{ $index }}"
+                                            :class="active === {{ $index }} ? 'ring-2 ring-emerald-500 scale-105' : 'opacity-60 hover:opacity-100'"
+                                            class="shrink-0 w-20 h-14 rounded-xl overflow-hidden bg-stone-200 transition-all">
+                                        <img src="{{ $photo['url'] }}" alt="thumb" class="w-full h-full object-cover">
+                                    </button>
+                                @endforeach
                             </div>
-                        @else
-                            <div class="h-full flex items-center justify-center text-6xl">🌿</div>
                         @endif
+
+                        {{-- Fullscreen Modal Tour --}}
+                        <template x-if="modalOpen">
+                            <div class="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4"
+                                 @keydown.escape.window="modalOpen = false">
+                                <button type="button" @click="modalOpen = false" class="absolute top-6 right-6 text-white text-3xl font-light hover:text-stone-300">✕</button>
+                                <div class="max-w-5xl max-h-[80vh] flex items-center justify-center">
+                                    <img :src="@json($galleryImages->pluck('url'))[active]"
+                                         class="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl">
+                                </div>
+                                <div class="flex items-center gap-4 mt-4 text-white text-sm">
+                                    <button type="button" @click="active = (active === 0 ? total - 1 : active - 1)" class="px-3 py-1 bg-white/20 rounded-lg hover:bg-white/30">Previous</button>
+                                    <span>Photo <span x-text="active + 1"></span> of {{ $galleryImages->count() }}</span>
+                                    <button type="button" @click="active = (active === total - 1 ? 0 : active + 1)" class="px-3 py-1 bg-white/20 rounded-lg hover:bg-white/30">Next</button>
+                                </div>
+                            </div>
+                        </template>
                     </div>
 
                     {{-- Info --}}
@@ -136,7 +194,7 @@
                         </div>
 
                         @auth
-                            <a href="{{ route('booking.show', array_merge(['room' => $room->id], request()->only(['check_in', 'check_out', 'adults', 'children', 'pets']))) }}"
+                            <a href="{{ route('booking.show', $room) }}?{{ http_build_query(request()->only(['check_in', 'check_out', 'adults', 'children', 'pets'])) }}"
                                class="block w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-center rounded-2xl transition-all shadow-lg shadow-emerald-200 hover:-translate-y-0.5 text-sm">
                                 Book This Room
                             </a>

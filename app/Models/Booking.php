@@ -17,13 +17,15 @@ use Illuminate\Support\Str;
     'check_in', 'check_out', 'booking_type',
     'adults', 'children', 'pets',
     'base_price', 'addons_total', 'pet_fee_total', 'discount_amount', 'total_price',
-    'status', 'payment_status', 'is_walk_in', 'special_requests',
+    'status', 'payment_status', 'payment_method', 'payment_proof', 'is_walk_in', 'special_requests',
     'qr_code_path', 'checked_in_at', 'checked_out_at',
 ])]
 class Booking extends Model
 {
     /** @use HasFactory<BookingFactory> */
     use HasFactory, SoftDeletes;
+
+    protected $table = 'room_bookings';
 
     protected function casts(): array
     {

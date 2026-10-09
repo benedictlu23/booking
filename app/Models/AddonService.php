@@ -14,6 +14,8 @@ class AddonService extends Model
     /** @use HasFactory<AddonServiceFactory> */
     use HasFactory;
 
+    protected $table = 'room_addon_services';
+
     protected function casts(): array
     {
         return [

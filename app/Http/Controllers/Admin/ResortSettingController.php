@@ -6,10 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\ResortSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ResortSettingController extends Controller
 {
-    public function index(): \Illuminate\View\View
+    public function index(): View
     {
         $settings = ResortSetting::orderBy('group')->orderBy('key')->get()->groupBy('group');
 

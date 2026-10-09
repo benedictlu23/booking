@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('booking_code')->unique();
             $table->foreignId('room_id')->constrained()->restrictOnDelete();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('discount_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('discount_id')->nullable()->nullOnDelete();
 
             // Guest info (for walk-ins or guests without accounts)
             $table->string('guest_name');

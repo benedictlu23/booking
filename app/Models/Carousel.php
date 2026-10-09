@@ -13,6 +13,8 @@ class Carousel extends Model
     /** @use HasFactory<CarouselFactory> */
     use HasFactory;
 
+    protected $table = 'room_carousels';
+
     protected function casts(): array
     {
         return [

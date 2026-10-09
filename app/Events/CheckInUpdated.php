@@ -25,6 +25,11 @@ class CheckInUpdated implements ShouldBroadcastNow
         ];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'CheckInUpdated';
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -34,6 +39,7 @@ class CheckInUpdated implements ShouldBroadcastNow
             'id' => $this->booking->id,
             'booking_code' => $this->booking->booking_code,
             'room_id' => $this->booking->room_id,
+            'room_number' => $this->booking->room?->room_number,
             'status' => $this->booking->status,
             'checked_in_at' => $this->booking->checked_in_at?->toIso8601String(),
             'checked_out_at' => $this->booking->checked_out_at?->toIso8601String(),

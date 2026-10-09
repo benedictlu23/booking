@@ -38,16 +38,26 @@
                             <td class="px-4 py-4">
                                 @php
                                     $statusColors = [
-                                        'available' => 'bg-emerald-100 text-emerald-700',
-                                        'occupied' => 'bg-red-100 text-red-700',
-                                        'maintenance' => 'bg-stone-200 text-stone-700',
-                                        'housekeeping' => 'bg-purple-100 text-purple-700',
-                                        'blocked' => 'bg-stone-300 text-stone-600',
+                                        'available' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                                        'occupied' => 'bg-red-100 text-red-800 border-red-300',
+                                        'maintenance' => 'bg-amber-100 text-amber-800 border-amber-300',
+                                        'housekeeping' => 'bg-purple-100 text-purple-800 border-purple-300',
+                                        'out_of_service' => 'bg-stone-200 text-stone-800 border-stone-400',
+                                        'blocked' => 'bg-stone-300 text-stone-700 border-stone-400',
                                     ];
                                 @endphp
-                                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold {{ $statusColors[$room->status] ?? 'bg-stone-100 text-stone-600' }}">
-                                    {{ ucfirst($room->status) }}
-                                </span>
+                                <form method="POST" action="{{ route('admin.rooms.quick-status', $room) }}" class="inline-block">
+                                    @csrf
+                                    <select name="status" onchange="this.form.submit()"
+                                            class="text-xs font-semibold rounded-lg border py-1 pl-2.5 pr-7 cursor-pointer transition-colors focus:ring-2 focus:ring-emerald-500 {{ $statusColors[$room->status] ?? 'bg-stone-100 text-stone-700 border-stone-200' }}">
+                                        <option value="available" @selected($room->status === 'available')>Available</option>
+                                        <option value="occupied" @selected($room->status === 'occupied')>Occupied</option>
+                                        <option value="maintenance" @selected($room->status === 'maintenance')>Maintenance</option>
+                                        <option value="housekeeping" @selected($room->status === 'housekeeping')>Housekeeping</option>
+                                        <option value="out_of_service" @selected($room->status === 'out_of_service')>Out of Service</option>
+                                        <option value="blocked" @selected($room->status === 'blocked')>Blocked</option>
+                                    </select>
+                                </form>
                             </td>
                             <td class="px-4 py-4">
                                 @if($room->allows_pets)

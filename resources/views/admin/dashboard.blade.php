@@ -161,30 +161,46 @@
 
             {{-- Today's Check-Outs --}}
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h3 class="font-bold text-stone-900 mb-4">Today's Check-Outs</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-stone-900">Today's Check-Outs</h3>
+                    <span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded-lg">
+                        {{ $todaysCheckOuts->count() }} total
+                    </span>
+                </div>
                 @forelse($todaysCheckOuts as $booking)
                     <div class="flex items-center justify-between py-3 border-b border-stone-50 last:border-0">
                         <div>
                             <p class="font-semibold text-stone-900 text-sm">{{ $booking->guest_name }}</p>
-                            <p class="text-xs text-stone-500">Room {{ $booking->room?->room_number }}</p>
+                            <p class="text-xs text-stone-500">Room {{ $booking->room?->room_number }} · {{ $booking->booking_code }}</p>
                         </div>
-                        <form method="POST" action="{{ route('admin.bookings.check-out', $booking) }}">
-                            @csrf
-                            <button type="submit" class="px-3 py-1.5 bg-amber-500 text-white text-xs font-semibold rounded-lg hover:bg-amber-600 transition-colors">
-                                Check Out
-                            </button>
-                        </form>
+                        <div class="flex items-center gap-2">
+                            @if($booking->status === 'checked_out')
+                                <span class="px-2.5 py-1 bg-stone-100 text-stone-600 rounded-lg text-xs font-semibold">
+                                    ✓ Checked Out
+                                </span>
+                            @else
+                                <form method="POST" action="{{ route('admin.bookings.check-out', $booking) }}">
+                                    @csrf
+                                    <button type="submit" class="px-3 py-1.5 bg-amber-500 text-white text-xs font-semibold rounded-lg hover:bg-amber-600 transition-colors">
+                                        Check Out
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
                 @empty
                     <p class="text-sm text-stone-400 text-center py-4">No check-outs today.</p>
                 @endforelse
             </div>
 
-            {{-- Frequent Guests --}}
+            {{-- Frequent Guests / Top Customers --}}
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h3 class="font-bold text-stone-900 mb-4">Top Guests 🏆</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-stone-900">Top Customers 🏆</h3>
+                    <a href="{{ route('admin.customers.index') }}" class="text-xs text-emerald-600 font-medium hover:underline">View All</a>
+                </div>
                 @foreach($frequentGuests as $index => $guest)
-                    <div class="flex items-center gap-3 py-2.5 border-b border-stone-50 last:border-0">
+                    <a href="{{ route('admin.customers.show', $guest) }}" class="flex items-center gap-3 py-2.5 border-b border-stone-50 last:border-0 hover:bg-stone-50 rounded-xl px-2 transition-colors">
                         <span class="w-6 text-center font-black text-stone-400 text-sm">{{ $index + 1 }}</span>
                         @if($guest->avatar)
                             <img src="{{ $guest->avatar }}" alt="{{ $guest->name }}" class="w-8 h-8 rounded-full object-cover">
@@ -195,11 +211,12 @@
                         @endif
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-semibold text-stone-900 truncate">{{ $guest->name }}</p>
+                            <p class="text-xs text-stone-400">₱{{ number_format($guest->bookings_sum_total_price ?? 0, 0) }} spent</p>
                         </div>
-                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg">
-                            {{ $guest->visit_count }}x
+                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg shrink-0">
+                            {{ $guest->bookings_count ?? $guest->visit_count }} stays
                         </span>
-                    </div>
+                    </a>
                 @endforeach
             </div>
         </div>

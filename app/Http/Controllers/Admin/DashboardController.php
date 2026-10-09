@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): \Illuminate\View\View
+    public function index(): View
     {
         $today = Carbon::today();
         $thisMonth = Carbon::now()->startOfMonth();
@@ -37,7 +37,7 @@ class DashboardController extends Controller
             ->get();
 
         $todaysCheckOuts = Booking::whereDate('check_out', $today)
-            ->where('status', 'checked_in')
+            ->whereIn('status', ['checked_in', 'checked_out', 'confirmed'])
             ->with(['room', 'user'])
             ->get();
 
@@ -52,22 +52,29 @@ class DashboardController extends Controller
             ->take(8)
             ->get();
 
-        // Monthly revenue chart data (last 6 months)
+        // Monthly revenue & bookings trend (last 6 months, using startOfMonth to avoid Carbon day overflow)
         $revenueChartData = collect(range(5, 0))->map(function (int $monthsAgo) {
-            $month = Carbon::now()->subMonths($monthsAgo);
+            $month = Carbon::now()->startOfMonth()->subMonths($monthsAgo);
 
             return [
                 'month' => $month->format('M Y'),
-                'revenue' => Booking::where('payment_status', 'paid')
+                'revenue' => (float) Booking::where('payment_status', 'paid')
                     ->whereYear('created_at', $month->year)
                     ->whereMonth('created_at', $month->month)
                     ->sum('total_price'),
+                'bookings_count' => Booking::whereNotIn('status', ['cancelled'])
+                    ->whereYear('created_at', $month->year)
+                    ->whereMonth('created_at', $month->month)
+                    ->count(),
             ];
         });
 
-        // Top frequent visitors
+        // Top customers ranked by actual bookings and total spend
         $frequentGuests = User::where('role', 'customer')
-            ->orderByDesc('visit_count')
+            ->withCount(['bookings' => fn ($q) => $q->whereNotIn('status', ['cancelled'])])
+            ->withSum(['bookings' => fn ($q) => $q->where('payment_status', 'paid')], 'total_price')
+            ->orderByDesc('bookings_count')
+            ->orderByDesc('bookings_sum_total_price')
             ->take(5)
             ->get();
 

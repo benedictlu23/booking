@@ -2,6 +2,12 @@
     <x-slot:heading>Resort Settings</x-slot:heading>
     <x-slot:subheading>Configure resort information and policies</x-slot:subheading>
 
+    <div class="flex items-center gap-2 mb-6">
+        <a href="{{ route('admin.settings.index') }}" class="px-4 py-2 text-xs font-bold rounded-xl text-white bg-emerald-600 shadow-sm">General Settings</a>
+        <a href="{{ route('admin.categories.index') }}" class="px-4 py-2 text-xs font-semibold rounded-xl text-stone-600 bg-white border border-stone-200 hover:bg-stone-50">Room Categories</a>
+        <a href="{{ route('admin.amenities.index') }}" class="px-4 py-2 text-xs font-semibold rounded-xl text-stone-600 bg-white border border-stone-200 hover:bg-stone-50">Resort Amenities</a>
+    </div>
+
     <div class="max-w-3xl">
         <form method="POST" action="{{ route('admin.settings.update') }}" class="space-y-5">
             @csrf

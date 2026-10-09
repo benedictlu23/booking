@@ -19,7 +19,7 @@ class Discount extends Model
     /** @use HasFactory<DiscountFactory> */
     use HasFactory;
 
-    protected $table = 'booking_discounts';
+    protected $table = 'room_discounts';
 
     protected function casts(): array
     {
@@ -63,14 +63,20 @@ class Discount extends Model
         return true;
     }
 
-    public function calculateDiscount(float $amount): float
+    public function calculateDiscount(float|int|string $amount): float
     {
-        if ($this->minimum_amount && $amount < $this->minimum_amount) {
-            return 0;
+        $amount = (float) $amount;
+        $minAmount = (float) ($this->minimum_amount ?? 0);
+
+        if ($minAmount > 0 && $amount < $minAmount) {
+            return 0.0;
         }
 
-        return $this->type === 'percentage'
-            ? round($amount * ($this->value / 100), 2)
-            : min($this->value, $amount);
+        $val = (float) $this->value;
+        $discount = $this->type === 'percentage'
+            ? round($amount * ($val / 100), 2)
+            : min($val, $amount);
+
+        return max(0.0, min($discount, $amount));
     }
 }

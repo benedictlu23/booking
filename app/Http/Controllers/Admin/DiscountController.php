@@ -6,17 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Discount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class DiscountController extends Controller
 {
-    public function index(): \Illuminate\View\View
+    public function index(): View
     {
         $discounts = Discount::latest()->get();
 
         return view('admin.discounts.index', compact('discounts'));
     }
 
-    public function create(): \Illuminate\View\View
+    public function create(): View
     {
         return view('admin.discounts.create');
     }
@@ -24,7 +25,7 @@ class DiscountController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'uppercase', 'unique:booking_discounts,code'],
+            'code' => ['required', 'string', 'uppercase', 'unique:room_discounts,code'],
             'description' => ['nullable', 'string'],
             'type' => ['required', 'in:percentage,fixed'],
             'value' => ['required', 'numeric', 'min:0'],
@@ -41,7 +42,7 @@ class DiscountController extends Controller
             ->with('success', "Discount code '{$validated['code']}' created.");
     }
 
-    public function edit(Discount $discount): \Illuminate\View\View
+    public function edit(Discount $discount): View
     {
         return view('admin.discounts.edit', compact('discount'));
     }
@@ -49,7 +50,7 @@ class DiscountController extends Controller
     public function update(Request $request, Discount $discount): RedirectResponse
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'uppercase', 'unique:booking_discounts,code,'.$discount->id],
+            'code' => ['required', 'string', 'uppercase', 'unique:room_discounts,code,'.$discount->id],
             'description' => ['nullable', 'string'],
             'type' => ['required', 'in:percentage,fixed'],
             'value' => ['required', 'numeric', 'min:0'],

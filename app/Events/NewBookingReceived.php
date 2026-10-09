@@ -27,6 +27,11 @@ class NewBookingReceived implements ShouldBroadcastNow
         ];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'NewBookingReceived';
+    }
+
     /**
      * @return array<string, mixed>
      */

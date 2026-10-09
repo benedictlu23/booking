@@ -91,7 +91,7 @@
                             <div class="space-y-2">
                                 @foreach($booking->addons as $addon)
                                     <div class="flex items-center justify-between text-sm">
-                                        <span class="text-stone-700">{{ $addon->addonService?->name }} × {{ $addon->quantity }}</span>
+                                        <span class="text-stone-700">{{ $addon->item_name ?? $addon->addonService?->name ?? 'Custom Service' }} × {{ $addon->quantity }}</span>
                                         <span class="font-medium">₱{{ number_format($addon->subtotal, 2) }}</span>
                                     </div>
                                 @endforeach

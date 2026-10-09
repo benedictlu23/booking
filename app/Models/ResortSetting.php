@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Cache;
 #[Fillable(['key', 'value', 'group'])]
 class ResortSetting extends Model
 {
+    protected $table = 'room_resort_settings';
+
     /**
      * Get a setting value by key, with optional cache.
      */

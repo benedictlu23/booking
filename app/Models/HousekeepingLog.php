@@ -8,16 +8,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['room_id', 'user_id', 'status', 'notes', 'completed_at'])]
+#[Fillable(['room_id', 'user_id', 'staff_name', 'status', 'notes', 'completed_at', 'cleaning_timestamp'])]
 class HousekeepingLog extends Model
 {
     /** @use HasFactory<HousekeepingLogFactory> */
     use HasFactory;
 
+    protected $table = 'room_housekeeping_logs';
+
     protected function casts(): array
     {
         return [
             'completed_at' => 'datetime',
+            'cleaning_timestamp' => 'datetime',
         ];
     }
 

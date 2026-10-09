@@ -9,10 +9,11 @@ use App\Models\Room;
 use App\Models\RoomCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\View\View;
 
 class RoomSearchController extends Controller
 {
-    public function index(): \Illuminate\View\View
+    public function index(): View
     {
         $carousels = Carousel::where('is_active', true)
             ->orderBy('sort_order')
@@ -40,7 +41,7 @@ class RoomSearchController extends Controller
         ));
     }
 
-    public function search(Request $request): \Illuminate\View\View
+    public function search(Request $request): View
     {
         $checkIn = $request->get('check_in', today()->format('Y-m-d'));
         $checkOut = $request->get('check_out', today()->addDay()->format('Y-m-d'));
@@ -77,7 +78,7 @@ class RoomSearchController extends Controller
         ));
     }
 
-    public function show(Room $room): \Illuminate\View\View
+    public function show(Room $room): View
     {
         $room->load(['category', 'amenities', 'photos']);
 

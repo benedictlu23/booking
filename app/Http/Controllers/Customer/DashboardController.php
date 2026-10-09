@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): \Illuminate\View\View
+    public function index(): View
     {
         $user = auth()->user();
 
@@ -28,7 +29,7 @@ class DashboardController extends Controller
         return view('customer.dashboard', compact('user', 'activeBookings', 'pastBookings'));
     }
 
-    public function bookings(Request $request): \Illuminate\View\View
+    public function bookings(Request $request): View
     {
         $user = auth()->user();
 
@@ -41,7 +42,7 @@ class DashboardController extends Controller
         return view('customer.bookings', compact('bookings', 'user'));
     }
 
-    public function showBooking(Booking $booking): \Illuminate\View\View
+    public function showBooking(Booking $booking): View
     {
         // Ensure this booking belongs to the current user
         if ($booking->user_id !== auth()->id()) {

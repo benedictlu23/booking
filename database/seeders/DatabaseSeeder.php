@@ -3,9 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\AddonService;
-use Illuminate\Support\Str;
 use App\Models\Amenity;
-use App\Models\Carousel;
 use App\Models\ResortSetting;
 use App\Models\Room;
 use App\Models\RoomCategory;

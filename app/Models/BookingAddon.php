@@ -8,11 +8,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['booking_id', 'addon_service_id', 'quantity', 'unit_price', 'subtotal'])]
+#[Fillable(['booking_id', 'addon_service_id', 'item_name', 'quantity', 'unit_price', 'subtotal'])]
 class BookingAddon extends Model
 {
     /** @use HasFactory<BookingAddonFactory> */
     use HasFactory;
+
+    protected $table = 'room_booking_addons';
 
     protected function casts(): array
     {
