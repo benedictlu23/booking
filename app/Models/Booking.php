@@ -1,0 +1,100 @@
+<?php
+
+namespace App\Models;
+
+use Database\Factories\BookingFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
+
+#[Fillable([
+    'booking_code', 'room_id', 'user_id', 'discount_id',
+    'guest_name', 'guest_email', 'guest_phone',
+    'check_in', 'check_out', 'booking_type',
+    'adults', 'children', 'pets',
+    'base_price', 'addons_total', 'pet_fee_total', 'discount_amount', 'total_price',
+    'status', 'payment_status', 'is_walk_in', 'special_requests',
+    'qr_code_path', 'checked_in_at', 'checked_out_at',
+])]
+class Booking extends Model
+{
+    /** @use HasFactory<BookingFactory> */
+    use HasFactory, SoftDeletes;
+
+    protected function casts(): array
+    {
+        return [
+            'check_in' => 'datetime',
+            'check_out' => 'datetime',
+            'checked_in_at' => 'datetime',
+            'checked_out_at' => 'datetime',
+            'is_walk_in' => 'boolean',
+            'base_price' => 'decimal:2',
+            'addons_total' => 'decimal:2',
+            'pet_fee_total' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'total_price' => 'decimal:2',
+            'adults' => 'integer',
+            'children' => 'integer',
+            'pets' => 'integer',
+        ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Booking $booking) {
+            if (empty($booking->booking_code)) {
+                $booking->booking_code = strtoupper('AGRO-'.Str::random(8));
+            }
+        });
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function discount(): BelongsTo
+    {
+        return $this->belongsTo(Discount::class);
+    }
+
+    public function addons(): HasMany
+    {
+        return $this->hasMany(BookingAddon::class);
+    }
+
+    public function getNightsAttribute(): int
+    {
+        return (int) $this->check_in->diffInDays($this->check_out);
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isConfirmed(): bool
+    {
+        return $this->status === 'confirmed';
+    }
+
+    public function isCheckedIn(): bool
+    {
+        return $this->status === 'checked_in';
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
+}

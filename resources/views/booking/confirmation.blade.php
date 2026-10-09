@@ -1,0 +1,131 @@
+<x-layouts.app>
+    <x-slot:title>Booking Confirmed</x-slot:title>
+
+    <div class="pt-24 pb-20 min-h-screen bg-gradient-to-br from-emerald-50 via-stone-50 to-teal-50">
+        <div class="max-w-2xl mx-auto px-4 sm:px-6">
+
+            {{-- Success Banner --}}
+            <div class="text-center mb-8 pt-8">
+                <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                    <svg class="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-black text-stone-900">Booking Confirmed! 🎉</h1>
+                <p class="text-stone-500 mt-2">Your reservation has been received. We'll see you soon!</p>
+            </div>
+
+            {{-- Booking Card --}}
+            <div class="bg-white rounded-3xl shadow-xl shadow-stone-200/60 border border-stone-100 overflow-hidden">
+
+                {{-- Header --}}
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-700 p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-emerald-200 text-sm font-medium">Booking Code</p>
+                            <p class="text-2xl font-black font-mono tracking-widest">{{ $booking->booking_code }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-emerald-200 text-sm">Status</p>
+                            <span class="inline-block px-3 py-1 bg-white/20 rounded-lg text-sm font-semibold capitalize">
+                                {{ str_replace('_', ' ', $booking->status) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 space-y-5">
+
+                    {{-- Stay Info --}}
+                    <div class="grid grid-cols-2 gap-4 p-4 bg-stone-50 rounded-2xl">
+                        <div>
+                            <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Check In</p>
+                            <p class="font-bold text-stone-900 text-lg">{{ $booking->check_in->format('D, M d Y') }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Check Out</p>
+                            <p class="font-bold text-stone-900 text-lg">{{ $booking->check_out->format('D, M d Y') }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Nights</p>
+                            <p class="font-bold text-stone-900">{{ $booking->nights }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Guests</p>
+                            <p class="font-bold text-stone-900">
+                                {{ $booking->adults }} Adults@if($booking->children > 0), {{ $booking->children }} Children@endif@if($booking->pets > 0) 🐾{{ $booking->pets }}@endif
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Room --}}
+                    <div class="flex items-center gap-4 p-4 border border-stone-100 rounded-2xl">
+                        <div class="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center text-2xl">🏡</div>
+                        <div>
+                            <p class="font-bold text-stone-900">{{ $booking->room?->name }}</p>
+                            <p class="text-sm text-stone-500">Room {{ $booking->room?->room_number }} · {{ $booking->room?->category?->name }}</p>
+                        </div>
+                    </div>
+
+                    {{-- Add-ons --}}
+                    @if($booking->addons->isNotEmpty())
+                        <div>
+                            <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Add-ons</p>
+                            <div class="space-y-2">
+                                @foreach($booking->addons as $addon)
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-stone-600">{{ $addon->addonService?->name }} × {{ $addon->quantity }}</span>
+                                        <span class="font-medium text-stone-900">₱{{ number_format($addon->subtotal, 2) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Price Breakdown --}}
+                    <div class="border-t border-stone-100 pt-4 space-y-2 text-sm">
+                        <div class="flex justify-between text-stone-500">
+                            <span>Base Price ({{ $booking->nights }} night{{ $booking->nights !== 1 ? 's' : '' }})</span>
+                            <span>₱{{ number_format($booking->base_price, 2) }}</span>
+                        </div>
+                        @if($booking->addons_total > 0)
+                            <div class="flex justify-between text-stone-500">
+                                <span>Add-ons</span>
+                                <span>₱{{ number_format($booking->addons_total, 2) }}</span>
+                            </div>
+                        @endif
+                        @if($booking->pet_fee_total > 0)
+                            <div class="flex justify-between text-stone-500">
+                                <span>Pet Fee</span>
+                                <span>₱{{ number_format($booking->pet_fee_total, 2) }}</span>
+                            </div>
+                        @endif
+                        @if($booking->discount_amount > 0)
+                            <div class="flex justify-between text-emerald-600">
+                                <span>Discount</span>
+                                <span>-₱{{ number_format($booking->discount_amount, 2) }}</span>
+                            </div>
+                        @endif
+                        <div class="flex justify-between font-black text-lg pt-2 border-t border-stone-100">
+                            <span class="text-stone-900">Total Amount Due</span>
+                            <span class="text-emerald-600">₱{{ number_format($booking->total_price, 2) }}</span>
+                        </div>
+                        <p class="text-xs text-stone-400 text-center">Payment is collected upon check-in at the resort.</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Actions --}}
+            <div class="flex flex-col sm:flex-row gap-3 mt-6">
+                <a href="{{ route('customer.bookings.show', $booking) }}"
+                   class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-center rounded-2xl transition-colors">
+                    View My Booking
+                </a>
+                <a href="{{ route('rooms.search') }}"
+                   class="flex-1 py-3.5 border-2 border-stone-200 hover:border-stone-300 text-stone-700 font-semibold text-center rounded-2xl transition-colors">
+                    Browse More Rooms
+                </a>
+            </div>
+        </div>
+    </div>
+</x-layouts.app>
