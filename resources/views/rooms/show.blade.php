@@ -19,22 +19,63 @@
                 <div class="lg:col-span-2 space-y-6">
 
                     {{-- Photo Gallery Tour --}}
-                    @php
+                    {{-- @php
                         $galleryImages = collect();
+                        $gallery = collect();
                         if ($room->photos->isNotEmpty()) {
                             foreach($room->photos as $p) {
-                                $galleryImages->push(['url' => asset('storage/'.$p->path), 'caption' => $p->caption ?? $room->name]);
+                                if (!empty($p->path)) {
+                                    $galleryImages->push(['url' => $p->path, 'caption' => $p->caption ?? $room->name]);
+                                }
+                            }
+                        } elseif (!empty($room->gallery) && is_array($room->gallery)) {
+                            // Fallback to legacy gallery JSON only when no photos records exist
+                            foreach($room->gallery as $gPath) {
+                                if (!empty($gPath)) {
+                                    $galleryImages->push(['url' => $gPath, 'caption' => $room->name]);
+                                    $gallery->push(['url' => $gPath, 'alt' => $room->name]);
+                                }
                             }
                         }
-                        if (!empty($room->gallery) && is_array($room->gallery)) {
-                            foreach($room->gallery as $gPath) {
-                                $galleryImages->push(['url' => asset('storage/'.$gPath), 'caption' => $room->name]);
-                            }
+                        $galleryImages = $galleryImages->unique('url')->values();
+                        $gallery = $galleryImages->unique('url')->values();
+                        
+                    @endphp --}}
+                    @php
+                        $gallery = [];
+
+                        if ($room->photos->isNotEmpty()) {
+                            $gallery = $room->photos
+                                ->filter(fn($p) => !empty($p->path))
+                                ->map(fn($p) => [
+                                    'src' => Str::startsWith($p->path, ['http://', 'https://']) ? $p->path : asset('storage/' . $p->path),
+                                    'alt' => $room->name,
+                                    'title' => $p->name ?? '',
+                                    'description' => $p->description ?? $room->name,
+                                ])
+                                ->values()
+                                ->toArray();
+                        } elseif (!empty($room->gallery) && is_array($room->gallery)) {
+                            $gallery = collect($room->gallery)
+                                ->filter(fn($gPath) => !empty($gPath))
+                                ->map(fn($gPath) => [
+                                    'src' => Str::startsWith($gPath, ['http://', 'https://']) ? $gPath : asset('storage/' . $gPath),
+                                    'alt' => $room->name,
+                                    'title' => $room->name,
+                                ])
+                                ->values()
+                                ->toArray();
                         }
                     @endphp
-
-                    <div x-data="{ active: 0, total: {{ $galleryImages->count() }}, modalOpen: false }" class="space-y-3">
-                        <div class="relative rounded-3xl overflow-hidden bg-stone-900 aspect-video group">
+                    @if($gallery)
+                        <x-carousel :images="$gallery" thumbnails clickable autoplay navigable caption="overlay"/>
+                    @else
+                        <div class="relative rounded-3xl overflow-hidden bg-stone-100 aspect-video group">
+                            <div class="h-full flex items-center justify-center text-6xl"><img src="{{ asset('storage/assets/AIR-LOGO.png') }}" alt=""></div>
+                        </div>
+                    @endif
+                    {{-- <div x-data="{ active: 0, total: {{ $galleryImages->count() }}, modalOpen: false }" class="space-y-3">
+                        <div class="relative rounded-3xl overflow-hidden bg-stone-100 aspect-video group">
                             @if($galleryImages->isNotEmpty())
                                 <div class="relative h-full w-full">
                                     @foreach($galleryImages as $index => $photo)
@@ -49,7 +90,6 @@
                                         </div>
                                     @endforeach
 
-                                    {{-- Navigation Arrows --}}
                                     @if($galleryImages->count() > 1)
                                         <button type="button" @click="active = (active === 0 ? total - 1 : active - 1)"
                                                 class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-colors">
@@ -61,7 +101,6 @@
                                         </button>
                                     @endif
 
-                                    {{-- Badge / Counter --}}
                                     <div class="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold flex items-center gap-2">
                                         <span>📷 <span x-text="active + 1"></span> / {{ $galleryImages->count() }}</span>
                                         <button type="button" @click="modalOpen = true" class="hover:underline">Fullscreen ⛶</button>
@@ -72,7 +111,6 @@
                             @endif
                         </div>
 
-                        {{-- Thumbnail Tour Strip --}}
                         @if($galleryImages->count() > 1)
                             <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
                                 @foreach($galleryImages as $index => $photo)
@@ -85,7 +123,6 @@
                             </div>
                         @endif
 
-                        {{-- Fullscreen Modal Tour --}}
                         <template x-if="modalOpen">
                             <div class="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4"
                                  @keydown.escape.window="modalOpen = false">
@@ -101,7 +138,7 @@
                                 </div>
                             </div>
                         </template>
-                    </div>
+                    </div> --}}
 
                     {{-- Info --}}
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
@@ -121,21 +158,21 @@
                         @endif
 
                         <div class="grid grid-cols-3 gap-4 mt-6 p-4 bg-stone-50 rounded-xl">
-                            <div class="text-center">
-                                <p class="text-2xl">👥</p>
+                            <div class="grid place-items-center text-center">
+                                <x-icon-users class="size-6" />
                                 <p class="font-bold text-stone-900">{{ $room->capacity_adults }}</p>
                                 <p class="text-xs text-stone-500">Adults</p>
                             </div>
                             @if($room->capacity_children > 0)
-                                <div class="text-center">
-                                    <p class="text-2xl">👶</p>
+                                <div class="grid place-items-center text-center">
+                                    <x-icon-baby class="size-6" />
                                     <p class="font-bold text-stone-900">{{ $room->capacity_children }}</p>
                                     <p class="text-xs text-stone-500">Children</p>
                                 </div>
                             @endif
                             @if($room->allows_pets)
-                                <div class="text-center">
-                                    <p class="text-2xl">🐾</p>
+                                <div class="grid place-items-center text-center">
+                                    <x-icon-paw class="size-6" />
                                     <p class="font-bold text-stone-900">+₱{{ number_format($room->pet_fee, 0) }}</p>
                                     <p class="text-xs text-stone-500">Pet Fee/Night</p>
                                 </div>
@@ -193,20 +230,33 @@
                             <span class="text-stone-400 text-sm mb-1">/ night</span>
                         </div>
 
-                        @auth
-                            <a href="{{ route('booking.show', $room) }}?{{ http_build_query(request()->only(['check_in', 'check_out', 'adults', 'children', 'pets'])) }}"
-                               class="block w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-center rounded-2xl transition-all shadow-lg shadow-emerald-200 hover:-translate-y-0.5 text-sm">
-                                Book This Room
-                            </a>
+                        @php
+                            $isRoomBlocked = in_array($room->status, ['maintenance', 'out_of_service', 'blocked']) || ! $room->is_active;
+                        @endphp
+
+                        @if($isRoomBlocked)
+                            <div class="p-4 bg-stone-100 border border-stone-200 rounded-2xl text-center">
+                                <span class="px-3 py-1 bg-rose-100 text-rose-800 text-xs font-bold rounded-lg inline-block mb-2">
+                                    🔴 Room Currently {{ ucfirst(str_replace('_', ' ', $room->status)) }}
+                                </span>
+                                <p class="text-xs text-stone-500">This room is temporarily unavailable for direct booking. Please check other rooms.</p>
+                            </div>
                         @else
-                            <a href="{{ route('login') }}"
-                               class="block w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-center rounded-2xl transition-all shadow-lg shadow-emerald-200 hover:-translate-y-0.5 text-sm">
-                                Sign In to Book
-                            </a>
-                            <p class="text-center text-xs text-stone-400 mt-2">
-                                No account? <a href="{{ route('register') }}" class="text-emerald-600 font-medium">Register free</a>
-                            </p>
-                        @endauth
+                            @auth
+                                <a href="{{ route('booking.show', $room) }}?{{ http_build_query(request()->only(['check_in', 'check_out', 'adults', 'children', 'pets', 'booking_type'])) }}"
+                                   class="block w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-center rounded-2xl transition-all shadow-lg shadow-emerald-200 hover:-translate-y-0.5 text-sm">
+                                    Book This Room
+                                </a>
+                            @else
+                                <a href="{{ route('login') }}"
+                                   class="block w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-center rounded-2xl transition-all shadow-lg shadow-emerald-200 hover:-translate-y-0.5 text-sm">
+                                    Sign In to Book
+                                </a>
+                                <p class="text-center text-xs text-stone-400 mt-2">
+                                    No account? <a href="{{ route('register') }}" class="text-emerald-600 font-medium">Register free</a>
+                                </p>
+                            @endauth
+                        @endif
 
                         @if($room->allows_pets)
                             <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">

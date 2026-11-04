@@ -5,16 +5,19 @@
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="xl:col-span-2 space-y-5">
             {{-- Photos --}}
-            @if($room->photos->isNotEmpty())
+            @php
+                $uniquePhotos = $room->photos->unique('path')->values();
+            @endphp
+            @if($uniquePhotos->isNotEmpty())
                 <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-stone-100">
                     <div x-data="{ active: 0 }" class="relative aspect-video bg-stone-100">
-                        @foreach($room->photos as $i => $photo)
+                        @foreach($uniquePhotos as $i => $photo)
                             <img x-show="active === {{ $i }}" src="{{ asset('storage/'.$photo->path) }}"
                                  alt="{{ $room->name }}" class="absolute inset-0 w-full h-full object-cover">
                         @endforeach
-                        @if($room->photos->count() > 1)
+                        @if($uniquePhotos->count() > 1)
                             <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-                                @foreach($room->photos as $i => $photo)
+                                @foreach($uniquePhotos as $i => $photo)
                                     <button @click="active = {{ $i }}"
                                             :class="active === {{ $i }} ? 'bg-white w-6' : 'bg-white/50 w-2'"
                                             class="h-2 rounded-full transition-all"></button>

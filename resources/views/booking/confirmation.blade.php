@@ -11,7 +11,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h1 class="text-3xl font-black text-stone-900">Booking Confirmed! 🎉</h1>
+                <h1 class="text-3xl font-black text-stone-900">Booking Placed!</h1>
                 <p class="text-stone-500 mt-2">Your reservation has been received. We'll see you soon!</p>
             </div>
 
@@ -66,7 +66,9 @@
 
                     {{-- Room --}}
                     <div class="flex items-center gap-4 p-4 border border-stone-100 rounded-2xl">
-                        <div class="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center text-2xl">🏡</div>
+                        <div class="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center text-2xl">
+                            <img src="{{ $booking->room?->photos->first()->path ?? asset('storage/assets/AIR-LOGO.png') }}" alt="">
+                        </div>
                         <div>
                             <p class="font-bold text-stone-900">{{ $booking->room?->name }}</p>
                             <p class="text-sm text-stone-500">Room {{ $booking->room?->room_number }} · {{ $booking->room?->category?->name }}</p>
@@ -113,68 +115,27 @@
                             </div>
                         @endif
                         <div class="flex justify-between font-black text-lg pt-2 border-t border-stone-100">
-                            <span class="text-stone-900">Total Amount Due</span>
+                            <span class="text-stone-900">Total Charges</span>
                             <span class="text-emerald-600">₱{{ number_format($booking->total_price, 2) }}</span>
                         </div>
+                        @if($booking->amount_paid > 0)
+                            <div class="flex justify-between text-xs pt-1">
+                                <span class="text-stone-500">Amount Paid:</span>
+                                <span class="font-bold text-emerald-600">₱{{ number_format($booking->amount_paid, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between text-xs pt-1">
+                                <span class="text-stone-500">Remaining Balance:</span>
+                                <span class="font-bold {{ $booking->balance_due > 0 ? 'text-rose-600' : 'text-emerald-600' }}">₱{{ number_format($booking->balance_due, 2) }}</span>
+                            </div>
+                        @endif
                         <div class="flex justify-between text-xs pt-1">
                             <span class="text-stone-500">Payment Status:</span>
-                            <span class="font-bold uppercase {{ $booking->payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600' }}">{{ $booking->payment_status }}</span>
+                            <span class="font-bold uppercase {{ $booking->payment_status === 'paid' ? 'text-emerald-600' : ($booking->payment_status === 'partial' ? 'text-amber-600' : 'text-rose-600') }}">{{ $booking->payment_status }}</span>
                         </div>
                     </div>
 
-                    {{-- Manual Payment Flow & Proof Upload --}}
-                    @if($booking->payment_proof)
-                        <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🧾</span>
-                                <div>
-                                    <p class="font-bold text-emerald-900 text-sm">Payment Proof Submitted</p>
-                                    <p class="text-xs text-emerald-700">Method: <span class="capitalize">{{ $booking->payment_method }}</span> · Our staff is reviewing your payment.</p>
-                                </div>
-                            </div>
-                        </div>
-                    @else
-                        <div class="p-5 bg-stone-50 rounded-2xl border border-stone-200 space-y-3" x-data="{ method: 'gcash' }">
-                            <div class="flex items-center justify-between">
-                                <h3 class="font-bold text-stone-900 text-sm">💳 Pay Online / Manual Transfer (Optional)</h3>
-                                <span class="text-xs text-stone-400">or pay at check-in</span>
-                            </div>
-                            <p class="text-xs text-stone-600">Upload your proof of payment (screenshot/receipt) to confirm your booking immediately.</p>
-
-                            <div class="grid grid-cols-2 gap-2 text-xs">
-                                <div class="p-2.5 bg-white rounded-xl border border-stone-200">
-                                    <p class="font-bold text-stone-900">GCash</p>
-                                    <p class="text-stone-500">0912-345-6789</p>
-                                    <p class="text-stone-400">Agro-Inland Resort</p>
-                                </div>
-                                <div class="p-2.5 bg-white rounded-xl border border-stone-200">
-                                    <p class="font-bold text-stone-900">BDO Unibank</p>
-                                    <p class="text-stone-500">0012-3456-7890</p>
-                                    <p class="text-stone-400">Agro-Inland Corp.</p>
-                                </div>
-                            </div>
-
-                            <form method="POST" action="{{ route('booking.payment-proof', $booking) }}" enctype="multipart/form-data" class="space-y-3 pt-2">
-                                @csrf
-                                <div>
-                                    <label class="block text-xs font-semibold text-stone-600 mb-1">Payment Method</label>
-                                    <select name="payment_method" x-model="method" class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                                        <option value="gcash">GCash</option>
-                                        <option value="bank_transfer">Bank Transfer</option>
-                                        <option value="cash">Cash on Arrival</option>
-                                    </select>
-                                </div>
-                                <div x-show="method !== 'cash'">
-                                    <label class="block text-xs font-semibold text-stone-600 mb-1">Proof of Payment Image</label>
-                                    <input type="file" name="payment_proof" accept="image/*"
-                                           class="w-full text-xs text-stone-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
-                                </div>
-                                <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm">
-                                    Submit Payment Proof
-                                </button>
-                            </form>
-                        </div>
-                    @endif
+                    {{-- Payment Proof Component --}}
+                    <livewire:booking.payment-proof :booking="$booking" />
                 </div>
             </div>
 

@@ -16,13 +16,19 @@ return new class extends Migration
             Schema::table('room_booking_addons', function (Blueprint $table) {
                 $table->unsignedBigInteger('addon_service_id')->nullable()->change();
             });
-
             return;
         }
 
-        Schema::table('room_booking_addons', function (Blueprint $table) {
-            $table->dropForeign('booking_addons_addon_service_id_foreign');
-        });
+        // Try dropping the foreign key safely
+        try {
+            Schema::table('room_booking_addons', function (Blueprint $table) {
+                // Laravel's automatic name might have been 'room_booking_addons_addon_service_id_foreign'
+                // If you explicitly named it 'booking_addons_addon_service_id_foreign' before, keep it here.
+                $table->dropForeign('booking_addons_addon_service_id_foreign');
+            });
+        } catch (\Exception $e) {
+            // Log it or silently pass if it doesn't exist
+        }
 
         Schema::table('room_booking_addons', function (Blueprint $table) {
             $table->unsignedBigInteger('addon_service_id')->nullable()->change();

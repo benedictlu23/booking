@@ -100,11 +100,54 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h3 class="font-bold text-stone-900 mb-4">Photos</h3>
-                <input type="file" name="photos[]" multiple accept="image/*"
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100"
+                 x-data="{
+                     previews: [],
+                     handleFiles(event) {
+                         const files = Array.from(event.target.files);
+                         this.previews = files.map(file => ({
+                             name: file.name,
+                             url: URL.createObjectURL(file),
+                             size: (file.size / 1024).toFixed(1) + ' KB'
+                         }));
+                     },
+                     clearPreviews() {
+                         this.previews = [];
+                         $refs.fileInput.value = '';
+                     }
+                 }">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-stone-900">Photos</h3>
+                    <template x-if="previews.length > 0">
+                        <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg"
+                              x-text="previews.length + (previews.length === 1 ? ' photo selected' : ' photos selected')"></span>
+                    </template>
+                </div>
+                <input type="file" name="photos[]" multiple accept="image/*" x-ref="fileInput" @change="handleFiles($event)"
                        class="w-full text-sm text-stone-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
                 <p class="text-xs text-stone-400 mt-2">First photo will be the cover image. Max 5MB per photo.</p>
+
+                {{-- Live Image Preview Grid --}}
+                <div x-show="previews.length > 0" class="mt-4 pt-4 border-t border-stone-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-stone-700 uppercase tracking-wide">Selected Image Previews:</span>
+                        <button type="button" @click="clearPreviews()" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">Clear selection</button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        <template x-for="(preview, index) in previews" :key="index">
+                            <div class="relative bg-stone-50 rounded-xl overflow-hidden border border-stone-200 aspect-square group shadow-xs">
+                                <img :src="preview.url" :alt="preview.name" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 text-[10px] text-white">
+                                    <span class="truncate font-medium" x-text="preview.name"></span>
+                                    <span class="text-stone-300" x-text="preview.size"></span>
+                                </div>
+                                <template x-if="index === 0">
+                                    <span class="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">Cover</span>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">

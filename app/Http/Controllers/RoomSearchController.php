@@ -20,12 +20,15 @@ class RoomSearchController extends Controller
             ->get();
 
         $categories = RoomCategory::where('is_active', true)
-            ->with(['rooms' => fn ($q) => $q->where('is_active', true)->where('status', 'available')])
+            ->with(['rooms' => fn ($q) => $q
+                ->where('is_active', true)
+                ->whereNotIn('status', ['maintenance', 'out_of_service', 'blocked']),
+            ])
             ->get();
 
         $featuredRooms = Room::with(['category', 'photos'])
             ->where('is_active', true)
-            ->where('status', 'available')
+            ->whereNotIn('status', ['maintenance', 'out_of_service', 'blocked'])
             ->take(6)
             ->get();
 
@@ -51,11 +54,11 @@ class RoomSearchController extends Controller
         $categoryId = $request->get('category_id');
         $maxPrice = $request->get('max_price');
         $minPrice = $request->get('min_price');
-        $bookingType = $request->get('booking_type', 'overnight');
+        $bookingType = $request->get('booking_type', '');
 
         $rooms = Room::with(['category', 'photos', 'amenities'])
             ->where('is_active', true)
-            ->where('status', 'available')
+            ->whereNotIn('status', ['maintenance', 'out_of_service', 'blocked'])
             ->where('capacity_adults', '>=', $adults)
             ->when($pets > 0, fn ($q) => $q->where('allows_pets', true))
             ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
@@ -64,10 +67,12 @@ class RoomSearchController extends Controller
             ->when($bookingType === 'day_pass', fn ($q) => $q->whereIn('booking_type', ['day_pass', 'both']))
             ->when($bookingType === 'overnight', fn ($q) => $q->whereIn('booking_type', ['overnight', 'both']))
             ->get()
-            ->filter(fn (Room $room) => $room->isAvailableFor(
-                Carbon::parse($checkIn),
-                Carbon::parse($checkOut)
-            ));
+            ->filter(function (Room $room) use ($checkIn, $checkOut) {
+                $cIn = Carbon::parse($checkIn);
+                $cOut = $room->booking_type === 'day_pass' ? $cIn : Carbon::parse($checkOut);
+
+                return $room->isAvailableFor($cIn, $cOut);
+            });
 
         $categories = RoomCategory::where('is_active', true)->get();
         $petPolicy = ResortSetting::get('pet_policy', '');

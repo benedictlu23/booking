@@ -30,10 +30,15 @@ class BookingController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $isDayPass = $request->input('booking_type') === 'day_pass';
+        if ($isDayPass && $request->filled('check_in')) {
+            $request->merge(['check_out' => $request->input('check_in')]);
+        }
+
         $validated = $request->validate([
             'room_id' => ['required', 'exists:rooms,id'],
             'check_in' => ['required', 'date', 'after_or_equal:today'],
-            'check_out' => ['required', 'date', 'after:check_in'],
+            'check_out' => ['required', 'date', $isDayPass ? 'same:check_in' : 'after:check_in'],
             'adults' => ['required', 'integer', 'min:1'],
             'children' => ['nullable', 'integer', 'min:0'],
             'pets' => ['nullable', 'integer', 'min:0'],
@@ -44,6 +49,9 @@ class BookingController extends Controller
             'addons' => ['nullable', 'array'],
             'addons.*.id' => ['nullable', 'exists:room_addon_services,id'],
             'addons.*.quantity' => ['nullable', 'integer', 'min:0'],
+        ], [
+            'check_out.same' => 'For Day Pass, the Check-Out date must be the same as the Check-In date.',
+            'check_out.after' => 'Check-out date must be after check-in date for overnight stays.',
         ]);
 
         $room = Room::findOrFail($validated['room_id']);
@@ -182,6 +190,11 @@ class BookingController extends Controller
     {
         $checkIn = $request->get('check_in');
         $checkOut = $request->get('check_out');
+        $bookingType = $request->get('booking_type', 'overnight');
+
+        if ($bookingType === 'day_pass' && $checkIn) {
+            $checkOut = $checkIn;
+        }
 
         if (! $checkIn || ! $checkOut) {
             return response()->json(['available' => false, 'message' => 'Please select check-in and check-out dates.']);
@@ -191,12 +204,16 @@ class BookingController extends Controller
             $cIn = Carbon::parse($checkIn);
             $cOut = Carbon::parse($checkOut);
 
-            if ($cIn->lt(Carbon::today()) || $cOut->lte($cIn)) {
+            if ($cIn->lt(Carbon::today())) {
+                return response()->json(['available' => false, 'message' => 'Check-in date cannot be in the past.']);
+            }
+
+            if ($bookingType !== 'day_pass' && $cOut->lte($cIn)) {
                 return response()->json(['available' => false, 'message' => 'Check-out date must be after check-in.']);
             }
 
             $available = $room->isAvailableFor($cIn, $cOut);
-            $nights = max(1, $cIn->diffInDays($cOut));
+            $nights = $bookingType === 'day_pass' ? 1 : max(1, $cIn->diffInDays($cOut));
 
             return response()->json([
                 'available' => $available,
@@ -262,7 +279,8 @@ class BookingController extends Controller
         if ($request->hasFile('payment_proof')) {
             $path = $request->file('payment_proof')->store('payments/'.$booking->id, 'public');
             $updateData['payment_proof'] = $path;
-            $updateData['payment_status'] = 'paid';
+            // Do NOT auto-mark as paid — admin must verify the uploaded proof.
+            // Payment status remains unpaid/partial until admin confirms.
         }
 
         $booking->update($updateData);

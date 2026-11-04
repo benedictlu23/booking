@@ -12,11 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (Schema::hasTable('booking_discounts')) {
+        if (Schema::hasTable('room_booking_discounts')) {
             return;
         }
 
-        Schema::create('booking_discounts', function (Blueprint $table) {
+        Schema::create('room_booking_discounts', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique();
             $table->string('description')->nullable();
@@ -40,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('booking_discounts');
+        Schema::dropIfExists('room_booking_discounts');
     }
 };

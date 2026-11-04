@@ -37,54 +37,124 @@ class BookingController extends Controller
 
     public function create(): View
     {
-        $rooms = Room::with('category')->where('is_active', true)->where('status', 'available')->get();
-        $customers = User::where('role', 'customer')->get();
+        $rooms = Room::with('category')
+            ->where('is_active', true)
+            ->whereNotIn('status', ['maintenance', 'out_of_service', 'blocked'])
+            ->orderBy('category_id')
+            ->orderBy('room_number')
+            ->get();
+        $customers = User::where('role', 'customer')->orderBy('name')->get();
 
         return view('admin.bookings.create', compact('rooms', 'customers'));
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $isDayPass = $request->input('booking_type') === 'day_pass';
+        if ($isDayPass && $request->filled('check_in')) {
+            $cIn = Carbon::parse($request->input('check_in'));
+            $request->merge(['check_out' => $cIn->copy()->setTime(17, 0)->format('Y-m-d\TH:i')]);
+        }
+
         $validated = $request->validate([
             'room_id' => ['required', 'exists:rooms,id'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['nullable', 'email'],
             'guest_phone' => ['nullable', 'string'],
             'check_in' => ['required', 'date', 'after_or_equal:today'],
-            'check_out' => ['required', 'date', 'after:check_in'],
+            'check_out' => [
+                'required',
+                'date',
+                $isDayPass
+                    ? function ($attribute, $value, $fail) use ($request) {
+                        try {
+                            if (Carbon::parse($value)->toDateString() !== Carbon::parse($request->input('check_in'))->toDateString()) {
+                                $fail('For Day Pass, the Check-Out date must match the Check-In date.');
+                            }
+                        } catch (\Throwable) {
+                            $fail('Invalid date format.');
+                        }
+                    }
+                    : 'after:check_in',
+            ],
             'adults' => ['required', 'integer', 'min:1'],
             'children' => ['nullable', 'integer', 'min:0'],
             'pets' => ['nullable', 'integer', 'min:0'],
             'booking_type' => ['required', 'in:overnight,day_pass'],
-            'is_walk_in' => ['boolean'],
+            'is_walk_in' => ['nullable', 'boolean'],
+            'payment_status' => ['nullable', 'in:unpaid,paid,partial'],
+            'payment_method' => ['nullable', 'string', 'in:cash,card,gcash,bank_transfer'],
+            'amount_paid' => ['nullable', 'numeric', 'min:0'],
+            'check_in_now' => ['nullable', 'boolean'],
+            'special_requests' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'check_out.after' => 'Check-out date must be after check-in date for overnight stays.',
         ]);
 
         $room = Room::findOrFail($validated['room_id']);
+        $cIn = Carbon::parse($validated['check_in']);
+        $cOut = Carbon::parse($validated['check_out']);
 
-        if (! $room->isAvailableFor(
-            Carbon::parse($validated['check_in']),
-            Carbon::parse($validated['check_out'])
-        )) {
+        if (! $room->isAvailableFor($cIn, $cOut)) {
             return back()->withErrors(['room_id' => 'This room is not available for the selected dates.'])->withInput();
         }
 
-        $petFee = ($validated['pets'] ?? 0) > 0 ? $room->pet_fee : 0;
+        $nights = $validated['booking_type'] === 'day_pass' ? 1 : max(1, $cIn->diffInDays($cOut));
+        $basePrice = round((float) $room->base_price * $nights, 2);
+        $petsCount = (int) ($validated['pets'] ?? 0);
+        $petFee = ($petsCount > 0 && $room->allows_pets)
+            ? round((float) $room->pet_fee * $nights * $petsCount, 2)
+            : 0.0;
+        $totalPrice = round($basePrice + $petFee, 2);
+
+        $paymentStatus = $request->input('payment_status', 'unpaid');
+        $paymentMethod = $request->input('payment_method', 'cash');
+
+        if ($paymentStatus === 'paid') {
+            $amountPaid = $totalPrice;
+        } elseif ($request->filled('amount_paid')) {
+            $amountPaid = min((float) $request->input('amount_paid'), $totalPrice);
+            $paymentStatus = ($amountPaid >= $totalPrice && $totalPrice > 0)
+                ? 'paid'
+                : ($amountPaid > 0 ? 'partial' : 'unpaid');
+        } else {
+            $amountPaid = 0.0;
+            $paymentStatus = 'unpaid';
+        }
+
+        $checkInNow = $request->boolean('check_in_now');
+        $bookingStatus = $checkInNow ? 'checked_in' : 'confirmed';
 
         $booking = Booking::create([
-            ...$validated,
+            'room_id' => $room->id,
+            'guest_name' => $validated['guest_name'],
+            'guest_email' => $validated['guest_email'] ?? null,
+            'guest_phone' => $validated['guest_phone'] ?? null,
+            'check_in' => $validated['check_in'],
+            'check_out' => $validated['check_out'],
+            'adults' => $validated['adults'],
+            'children' => $validated['children'] ?? 0,
+            'pets' => $petsCount,
+            'booking_type' => $validated['booking_type'],
             'booking_code' => 'AGRO-'.strtoupper(Str::random(8)),
-            'user_id' => $request->user_id ?? null,
-            'base_price' => $room->base_price,
+            'user_id' => $request->user_id ?: null,
+            'base_price' => $basePrice,
             'pet_fee_total' => $petFee,
             'addons_total' => 0,
             'discount_amount' => 0,
-            'total_price' => $room->base_price + $petFee,
-            'status' => 'confirmed',
-            'payment_status' => 'unpaid',
+            'total_price' => $totalPrice,
+            'amount_paid' => $amountPaid,
+            'status' => $bookingStatus,
+            'checked_in_at' => $checkInNow ? now() : null,
+            'payment_status' => $paymentStatus,
+            'payment_method' => $paymentMethod,
             'is_walk_in' => $request->boolean('is_walk_in', true),
+            'special_requests' => $validated['special_requests'] ?? null,
         ]);
 
-        $room->update(['status' => 'occupied']);
+        if ($checkInNow) {
+            $room->update(['status' => 'occupied']);
+        }
 
         try {
             broadcast(new NewBookingReceived($booking))->toOthers();
@@ -98,7 +168,7 @@ class BookingController extends Controller
 
     public function show(Booking $booking): View
     {
-        $booking->load(['room.category', 'user', 'addons.addonService', 'discount']);
+        $booking->load(['room.category', 'room.photos', 'user', 'addons.addonService', 'discount']);
         $availableAddons = AddonService::where('is_active', true)->orderBy('sort_order')->get();
         $housekeepers = User::where('role', 'housekeeper')->orderBy('name')->get();
         $allStaff = User::whereIn('role', ['housekeeper', 'desk_staff', 'admin'])->orderBy('name')->get();
@@ -139,6 +209,7 @@ class BookingController extends Controller
 
         if ($request->boolean('settle_payment') || $request->input('payment_status') === 'paid') {
             $update['payment_status'] = 'paid';
+            $update['amount_paid'] = $booking->total_price;
             if ($request->filled('payment_method')) {
                 $update['payment_method'] = $request->payment_method;
             }
@@ -188,14 +259,23 @@ class BookingController extends Controller
     {
         $validated = $request->validate([
             'payment_method' => ['required', 'string', 'in:cash,card,gcash,bank_transfer'],
+            'amount' => ['nullable', 'numeric', 'min:0.01'],
         ]);
 
+        $settleAmount = $request->filled('amount')
+            ? (float) $request->input('amount')
+            : $booking->balance_due;
+
+        $newAmountPaid = round((float) ($booking->amount_paid ?? 0) + $settleAmount, 2);
+        $newPaymentStatus = $newAmountPaid >= (float) $booking->total_price ? 'paid' : 'partial';
+
         $booking->update([
-            'payment_status' => 'paid',
+            'amount_paid' => min($newAmountPaid, (float) $booking->total_price),
+            'payment_status' => $newPaymentStatus,
             'payment_method' => $validated['payment_method'],
         ]);
 
-        return back()->with('success', "Payment for booking {$booking->booking_code} marked as settled (Paid).");
+        return back()->with('success', "Payment for booking {$booking->booking_code} recorded. Balance: ₱".number_format($booking->fresh()->balance_due, 2));
     }
 
     public function addExtraCharge(Request $request, Booking $booking): RedirectResponse
@@ -225,13 +305,23 @@ class BookingController extends Controller
 
         $newAddonsTotal = (float) $booking->addons()->sum('subtotal');
         $newTotalPrice = max(0, round((float) $booking->base_price + $newAddonsTotal + (float) $booking->pet_fee_total - (float) $booking->discount_amount, 2));
+        $currentAmountPaid = (float) ($booking->amount_paid ?? 0);
+
+        if ($currentAmountPaid >= $newTotalPrice && $newTotalPrice > 0) {
+            $paymentStatus = 'paid';
+        } elseif ($currentAmountPaid > 0) {
+            $paymentStatus = 'partial';
+        } else {
+            $paymentStatus = 'unpaid';
+        }
 
         $booking->update([
             'addons_total' => $newAddonsTotal,
             'total_price' => $newTotalPrice,
+            'payment_status' => $paymentStatus,
         ]);
 
-        return back()->with('success', "Extra charge '{$itemName}' attached to booking {$booking->booking_code}.");
+        return back()->with('success', "Extra charge '{$itemName}' (₱".number_format($subtotal, 2).') attached to billing. Balance due: ₱'.number_format($booking->fresh()->balance_due, 2));
     }
 
     public function cancel(Booking $booking): RedirectResponse
@@ -255,8 +345,8 @@ class BookingController extends Controller
     public function matrix(Request $request): View
     {
         $startDate = Carbon::parse($request->get('start', today()))->startOfDay();
-        $days = (int) $request->get('days', 7); // 7 or 30 day view
-        $days = in_array($days, [7, 30]) ? $days : 7;
+        $days = (int) $request->get('days', 7); // 7, 14, or 30 day view
+        $days = in_array($days, [7, 14, 30]) ? $days : 7;
         $endDate = $startDate->copy()->addDays($days);
 
         $rooms = Room::with(['category', 'bookings' => function ($query) use ($startDate, $endDate) {

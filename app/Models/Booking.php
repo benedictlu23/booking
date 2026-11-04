@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
     'guest_name', 'guest_email', 'guest_phone',
     'check_in', 'check_out', 'booking_type',
     'adults', 'children', 'pets',
-    'base_price', 'addons_total', 'pet_fee_total', 'discount_amount', 'total_price',
+    'base_price', 'addons_total', 'pet_fee_total', 'discount_amount', 'total_price', 'amount_paid',
     'status', 'payment_status', 'payment_method', 'payment_proof', 'is_walk_in', 'special_requests',
     'qr_code_path', 'checked_in_at', 'checked_out_at',
 ])]
@@ -40,6 +40,7 @@ class Booking extends Model
             'pet_fee_total' => 'decimal:2',
             'discount_amount' => 'decimal:2',
             'total_price' => 'decimal:2',
+            'amount_paid' => 'decimal:2',
             'adults' => 'integer',
             'children' => 'integer',
             'pets' => 'integer',
@@ -98,5 +99,20 @@ class Booking extends Model
     public function isCancelled(): bool
     {
         return $this->status === 'cancelled';
+    }
+
+    public function getBalanceDueAttribute(): float
+    {
+        return max(0.0, round((float) $this->total_price - (float) ($this->amount_paid ?? 0), 2));
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return $this->payment_status === 'paid' && $this->balance_due <= 0;
+    }
+
+    public function isPartial(): bool
+    {
+        return $this->payment_status === 'partial' || ($this->amount_paid > 0 && $this->balance_due > 0);
     }
 }

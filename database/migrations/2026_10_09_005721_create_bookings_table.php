@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (Schema::hasTable('bookings')) {
+        if (Schema::hasTable('room_bookings')) {
             return;
         }
 
-        Schema::create('bookings', function (Blueprint $table) {
+        Schema::create('room_bookings', function (Blueprint $table) {
             $table->id();
             $table->string('booking_code')->unique();
             $table->foreignId('room_id')->constrained()->restrictOnDelete();
@@ -66,6 +66,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bookings');
+        Schema::dropIfExists('room_bookings');
     }
 };

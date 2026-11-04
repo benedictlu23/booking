@@ -16,14 +16,24 @@ return new class extends Migration
             return;
         }
 
-        Schema::table('room_bookings', function (Blueprint $table) {
-            $table->dropForeign('bookings_discount_id_foreign');
+        try {
+            Schema::table('room_bookings', function (Blueprint $table) {
+                $table->dropForeign('bookings_discount_id_foreign');
+            });
+        } catch (Throwable) {
+            // Foreign key may already have been dropped or renamed
+        }
 
-            $table->foreign('discount_id')
-                ->references('id')
-                ->on('room_discounts')
-                ->nullOnDelete();
-        });
+        try {
+            Schema::table('room_bookings', function (Blueprint $table) {
+                $table->foreign('discount_id')
+                    ->references('id')
+                    ->on('room_discounts')
+                    ->nullOnDelete();
+            });
+        } catch (Throwable) {
+            // Foreign key might already exist
+        }
     }
 
     /**

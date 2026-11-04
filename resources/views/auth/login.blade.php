@@ -7,10 +7,8 @@
             <div class="bg-white rounded-3xl shadow-xl shadow-stone-200/60 p-8 border border-stone-100">
                 {{-- Header --}}
                 <div class="text-center mb-8">
-                    <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200">
-                        <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945" />
-                        </svg>
+                    <div class="w-16 h-16 flex items-center justify-center mx-auto mb-4 ">
+                        <img src="{{ asset('storage/assets/AIR-LOGO.png') }}" alt="">
                     </div>
                     <h1 class="text-2xl font-bold text-stone-900">Welcome Back</h1>
                     <p class="text-sm text-stone-500 mt-1">Sign in to your Agro-Inland account</p>

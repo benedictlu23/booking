@@ -117,7 +117,7 @@
                 {{-- Existing photos --}}
                 @if($room->photos->isNotEmpty())
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 mb-6">
-                        @foreach($room->photos as $photo)
+                        @foreach($room->photos->unique('path') as $photo)
                             <div class="relative bg-stone-50 rounded-2xl p-2 border border-stone-200 flex flex-col items-center shadow-xs hover:shadow-md transition-shadow">
                                 <div class="relative w-full h-24 rounded-xl overflow-hidden bg-stone-200">
                                     <img src="{{ asset('storage/'.$photo->path) }}" alt="Room photo"
@@ -154,16 +154,56 @@
                     </div>
                 @endif
 
-                {{-- Upload new photos --}}
-                <div class="p-4 bg-stone-50/70 border border-stone-200 rounded-2xl">
-                    <label class="block text-xs font-bold text-stone-800 uppercase tracking-wider mb-1.5">
-                        ➕ Upload New Photos
-                    </label>
-                    <input type="file" name="photos[]" multiple accept="image/*"
+                {{-- Upload new photos with dynamic live preview --}}
+                <div class="p-4 bg-stone-50/70 border border-stone-200 rounded-2xl"
+                     x-data="{
+                         newPreviews: [],
+                         handleFiles(event) {
+                             const files = Array.from(event.target.files);
+                             this.newPreviews = files.map(file => ({
+                                 name: file.name,
+                                 url: URL.createObjectURL(file),
+                                 size: (file.size / 1024).toFixed(1) + ' KB'
+                             }));
+                         },
+                         clearPreviews() {
+                             this.newPreviews = [];
+                             $refs.fileInput.value = '';
+                         }
+                     }">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold text-stone-800 uppercase tracking-wider">
+                            ➕ Upload New Photos
+                        </label>
+                        <template x-if="newPreviews.length > 0">
+                            <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg"
+                                  x-text="newPreviews.length + (newPreviews.length === 1 ? ' new photo selected' : ' new photos selected')"></span>
+                        </template>
+                    </div>
+                    <input type="file" name="photos[]" multiple accept="image/*" x-ref="fileInput" @change="handleFiles($event)"
                            class="w-full text-sm text-stone-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer cursor-pointer">
                     <p class="text-[11px] text-stone-400 mt-2">
                         Supported formats: JPG, PNG, WEBP, AVIF. You can select multiple images at once.
                     </p>
+
+                    {{-- Live Image Preview Grid --}}
+                    <div x-show="newPreviews.length > 0" class="mt-4 pt-4 border-t border-stone-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-stone-700 uppercase tracking-wide">New Photos to Upload:</span>
+                            <button type="button" @click="clearPreviews()" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">Clear selection</button>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                            <template x-for="(preview, index) in newPreviews" :key="index">
+                                <div class="relative bg-white rounded-xl overflow-hidden border border-stone-200 aspect-square group shadow-xs">
+                                    <img :src="preview.url" :alt="preview.name" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 text-[10px] text-white">
+                                        <span class="truncate font-medium" x-text="preview.name"></span>
+                                        <span class="text-stone-300" x-text="preview.size"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
                 </div>
             </div>
 

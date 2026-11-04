@@ -71,18 +71,25 @@ class DashboardController extends Controller
 
         // Top customers ranked by actual bookings and total spend
         $frequentGuests = User::where('role', 'customer')
-            ->withCount(['bookings' => fn ($q) => $q->whereNotIn('status', ['cancelled'])])
-            ->withSum(['bookings' => fn ($q) => $q->where('payment_status', 'paid')], 'total_price')
-            ->orderByDesc('bookings_count')
+            ->withCount(['bookings' => fn($q) => $q->whereNotIn('status', ['cancelled'])])
+            ->withSum(['bookings' => fn($q) => $q->where('payment_status', 'paid')], 'total_price')
+            ->orderByDesc('visit_count')
             ->orderByDesc('bookings_sum_total_price')
             ->take(5)
             ->get();
 
         return view('admin.dashboard', compact(
-            'totalRevenue', 'totalBookings', 'totalRooms',
-            'occupancyRate', 'occupiedRooms', 'todaysCheckIns',
-            'todaysCheckOuts', 'pendingBookings', 'recentBookings',
-            'revenueChartData', 'frequentGuests'
+            'totalRevenue',
+            'totalBookings',
+            'totalRooms',
+            'occupancyRate',
+            'occupiedRooms',
+            'todaysCheckIns',
+            'todaysCheckOuts',
+            'pendingBookings',
+            'recentBookings',
+            'revenueChartData',
+            'frequentGuests'
         ));
     }
 }

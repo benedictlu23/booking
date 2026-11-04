@@ -11,11 +11,11 @@
             {{-- Status Banner --}}
             @php
                 $banners = [
-                    'pending' => ['bg' => 'bg-amber-50 border-amber-200', 'text' => 'text-amber-800', 'icon' => '⏳', 'msg' => 'Your booking is awaiting confirmation. Please prepare for payment upon arrival.'],
-                    'confirmed' => ['bg' => 'bg-blue-50 border-blue-200', 'text' => 'text-blue-800', 'icon' => '✅', 'msg' => "Your booking is confirmed! We look forward to welcoming you."],
-                    'checked_in' => ['bg' => 'bg-emerald-50 border-emerald-200', 'text' => 'text-emerald-800', 'icon' => '🏨', 'msg' => 'You are currently checked in. Enjoy your stay!'],
-                    'checked_out' => ['bg' => 'bg-stone-50 border-stone-200', 'text' => 'text-stone-700', 'icon' => '👋', 'msg' => 'Thank you for staying with us. We hope to see you again!'],
-                    'cancelled' => ['bg' => 'bg-red-50 border-red-200', 'text' => 'text-red-800', 'icon' => '❌', 'msg' => 'This booking has been cancelled.'],
+                    'pending' => ['bg' => 'bg-amber-50 border-amber-200', 'text' => 'text-amber-800', 'icon' => '', 'msg' => 'Your booking is awaiting confirmation. Please prepare for payment upon arrival.'],
+                    'confirmed' => ['bg' => 'bg-blue-50 border-blue-200', 'text' => 'text-blue-800', 'icon' => '', 'msg' => "Your booking is confirmed! We look forward to welcoming you."],
+                    'checked_in' => ['bg' => 'bg-emerald-50 border-emerald-200', 'text' => 'text-emerald-800', 'icon' => '', 'msg' => 'You are currently checked in. Enjoy your stay!'],
+                    'checked_out' => ['bg' => 'bg-stone-50 border-stone-200', 'text' => 'text-stone-700', 'icon' => '', 'msg' => 'Thank you for staying with us. We hope to see you again!'],
+                    'cancelled' => ['bg' => 'bg-red-50 border-red-200', 'text' => 'text-red-800', 'icon' => '', 'msg' => 'This booking has been cancelled.'],
                 ];
                 $banner = $banners[$booking->status] ?? $banners['pending'];
             @endphp
@@ -69,10 +69,10 @@
                     <div class="flex items-center gap-4 p-4 border border-stone-100 rounded-2xl">
                         <div class="w-16 h-16 rounded-xl overflow-hidden bg-stone-100 shrink-0">
                             @if($booking->room?->photos->first())
-                                <img src="{{ asset('storage/'.$booking->room->photos->first()->path) }}"
+                                <img src="{{ $booking->room->photos->first()->path }}"
                                      class="w-full h-full object-cover">
                             @else
-                                <div class="w-full h-full flex items-center justify-center text-2xl">🏡</div>
+                                <img src="{{ asset('storage/assets/AIR-LOGO.png') }}" alt="">
                             @endif
                         </div>
                         <div>
@@ -115,9 +115,19 @@
                             <div class="flex justify-between text-emerald-600"><span>Discount</span><span>-₱{{ number_format($booking->discount_amount, 2) }}</span></div>
                         @endif
                         <div class="flex justify-between font-black text-lg pt-2 border-t border-stone-100">
-                            <span>Total</span>
+                            <span>Total Charges</span>
                             <span class="text-emerald-600">₱{{ number_format($booking->total_price, 2) }}</span>
                         </div>
+                        @if($booking->amount_paid > 0)
+                            <div class="flex justify-between text-stone-500 text-xs pt-1">
+                                <span>Amount Paid</span>
+                                <span class="font-bold text-emerald-600">₱{{ number_format($booking->amount_paid, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between text-xs pt-1">
+                                <span class="font-bold text-stone-700">Remaining Balance</span>
+                                <span class="font-extrabold {{ $booking->balance_due > 0 ? 'text-rose-600' : 'text-emerald-600' }}">₱{{ number_format($booking->balance_due, 2) }}</span>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Cancel action --}}

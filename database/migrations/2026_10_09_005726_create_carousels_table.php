@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (Schema::hasTable('carousels')) {
+        if (Schema::hasTable('room_carousels')) {
             return;
         }
 
-        Schema::create('carousels', function (Blueprint $table) {
+        Schema::create('room_carousels', function (Blueprint $table) {
             $table->id();
             $table->string('title')->nullable();
             $table->string('subtitle')->nullable();
@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('carousels');
+        Schema::dropIfExists('room_carousels');
     }
 };

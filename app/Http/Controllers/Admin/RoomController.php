@@ -61,17 +61,15 @@ class RoomController extends Controller
         }
 
         if ($request->hasFile('photos')) {
-            $gallery = [];
             foreach ($request->file('photos') as $index => $photo) {
                 $path = $photo->store('rooms/'.$room->id, 'public');
-                $gallery[] = $path;
                 $room->photos()->create([
                     'path' => $path,
                     'sort_order' => $index,
                     'is_cover' => $index === 0,
                 ]);
             }
-            $room->update(['gallery' => $gallery]);
+            $room->update(['gallery' => $room->photos()->pluck('path')->toArray()]);
         }
 
         return redirect()->route('admin.rooms.index')
@@ -118,17 +116,17 @@ class RoomController extends Controller
         $room->amenities()->sync($request->amenities ?? []);
 
         if ($request->hasFile('photos')) {
-            $gallery = $room->gallery ?? [];
+            $hasCover = $room->photos()->where('is_cover', true)->exists();
+            $existingPhotoCount = $room->photos()->count();
             foreach ($request->file('photos') as $index => $photo) {
                 $path = $photo->store('rooms/'.$room->id, 'public');
-                $gallery[] = $path;
                 $room->photos()->create([
                     'path' => $path,
-                    'sort_order' => $room->photos()->count() + $index,
-                    'is_cover' => $room->photos()->count() === 0 && $index === 0,
+                    'sort_order' => $existingPhotoCount + $index,
+                    'is_cover' => ! $hasCover && $index === 0,
                 ]);
             }
-            $room->update(['gallery' => $gallery]);
+            $room->update(['gallery' => $room->photos()->pluck('path')->toArray()]);
         }
 
         return redirect()->route('admin.rooms.show', $room)
@@ -163,11 +161,10 @@ class RoomController extends Controller
         // Remove from storage
         Storage::disk('public')->delete($photo->path);
 
-        // Remove path from gallery JSON column if present
-        $gallery = array_values(array_filter($room->gallery ?? [], fn ($p) => $p !== $photo->path));
-        $room->update(['gallery' => $gallery]);
-
         $photo->delete();
+
+        // Keep gallery array strictly in sync with actual photos
+        $room->update(['gallery' => $room->photos()->pluck('path')->toArray()]);
 
         return back()->with('success', 'Photo removed successfully.');
     }

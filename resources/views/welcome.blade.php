@@ -19,7 +19,7 @@
                  x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                  x-transition:leave="transition-opacity duration-500" x-transition:leave-end="opacity-0"
                  class="absolute inset-0">
-                <img src="{{ asset('storage/'.$slide->image_path) }}" alt="{{ $slide->title }}"
+                <img src="{{ $slide->image_path }}" alt="{{ $slide->title }}"
                      class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-r from-stone-900/80 via-stone-900/50 to-transparent"></div>
             </div>
@@ -139,6 +139,7 @@
                 <div class="lg:col-span-1">
                     <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Type</label>
                     <select name="booking_type" class="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-stone-50">
+                        <option value="">All Types</option>
                         <option value="overnight">Overnight</option>
                         <option value="day_pass">Day Pass</option>
                     </select>
@@ -167,15 +168,13 @@
                    class="group bg-white rounded-2xl overflow-hidden shadow-md shadow-stone-200/60 hover:shadow-xl hover:shadow-stone-200/80 transition-all duration-300 hover:-translate-y-1">
                     <div class="relative h-56 overflow-hidden bg-stone-100">
                         @if($room->photos->isNotEmpty())
-                            <img src="{{ asset('storage/'.$room->photos->first()->path) }}"
+                            <img src="{{ $room->photos->first()->path }}"
                                  alt="{{ $room->name }}"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         @else
-                            <div class="w-full h-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-                                <svg class="w-16 h-16 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                </svg>
-                            </div>
+                            <img src="{{ asset('storage/assets/AIR-LOGO.png') }}"
+                                 alt=""
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         @endif
                         <div class="absolute top-3 left-3">
                             <span class="px-2.5 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-stone-700 rounded-lg">
@@ -184,7 +183,8 @@
                         </div>
                         @if($room->allows_pets)
                             <div class="absolute top-3 right-3">
-                                <span class="px-2.5 py-1 bg-amber-100/90 backdrop-blur-sm text-xs font-semibold text-amber-800 rounded-lg">🐾 Pet-Friendly</span>
+                                <span class="px-2.5 py-1 bg-amber-100/90 backdrop-blur-sm text-xs font-semibold text-amber-800 rounded-lg flex">
+                                    Pet-Friendly &nbsp;<x-icon-paw class="size-5"/></span>
                             </div>
                         @endif
                     </div>
@@ -201,19 +201,17 @@
                         </div>
                         <div class="flex items-center gap-4 mt-4 text-xs text-stone-500">
                             <span class="flex items-center gap-1">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                <x-icon-users/>
                                 {{ $room->capacity_adults }} Adults
                             </span>
                             @if($room->capacity_children > 0)
                                 <span class="flex items-center gap-1">
-                                    👶 {{ $room->capacity_children }} Children
+                                    <x-icon-baby/> {{ $room->capacity_children }} Children
                                 </span>
                             @endif
                         </div>
-                        <div class="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between">
-                            <span class="text-xs text-stone-400 font-medium uppercase tracking-wide">
-                                {{ $room->status === 'available' ? '✅ Available' : '🔴 Unavailable' }}
-                            </span>
+                        <div class="mt-4 pt-4 border-t border-stone-100 flex items-center justify-end">
+                            
                             <span class="text-sm font-semibold text-emerald-600 group-hover:underline">View Details →</span>
                         </div>
                     </div>
@@ -273,7 +271,7 @@
                 <div class="space-y-4">
                     <div class="flex items-start gap-4 p-4 bg-stone-50 rounded-2xl">
                         <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
-                            📍
+                            <x-icon-map-pin class="text-red-500"/>
                         </div>
                         <div>
                             <p class="font-semibold text-stone-900">Address</p>
@@ -282,7 +280,7 @@
                     </div>
                     @if($contactDetails)
                         <div class="flex items-start gap-4 p-4 bg-stone-50 rounded-2xl">
-                            <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">📞</div>
+                            <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0"><x-icon-phone /></div>
                             <div>
                                 <p class="font-semibold text-stone-900">Contact</p>
                                 <p class="text-stone-600 text-sm mt-0.5">{{ $contactDetails }}</p>
@@ -294,15 +292,13 @@
                     <a href="https://www.google.com/maps/dir/?api=1&destination={{ $resortLat }},{{ $resortLng }}"
                        target="_blank"
                        class="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors text-sm">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        </svg>
+                        <x-icon-direction/>
                         Get Directions
                     </a>
                     <a href="https://waze.com/ul?ll={{ $resortLat }},{{ $resortLng }}&navigate=yes"
                        target="_blank"
                        class="inline-flex items-center gap-2 px-5 py-3 bg-sky-500 text-white font-semibold rounded-xl hover:bg-sky-600 transition-colors text-sm">
-                        🚗 Open in Waze
+                        <x-icon-waze class="size-6"/> Open in Waze
                     </a>
                 </div>
             </div>

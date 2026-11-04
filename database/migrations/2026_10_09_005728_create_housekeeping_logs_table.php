@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (Schema::hasTable('housekeeping_logs')) {
+        if (Schema::hasTable('room_housekeeping_logs')) {
             return;
         }
 
-        Schema::create('housekeeping_logs', function (Blueprint $table) {
+        Schema::create('room_housekeeping_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('room_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('housekeeping_logs');
+        Schema::dropIfExists('room_housekeeping_logs');
     }
 };
