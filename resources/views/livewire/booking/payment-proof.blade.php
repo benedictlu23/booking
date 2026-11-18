@@ -42,46 +42,53 @@ new class extends Component {
 
 <div>
     @if($booking->payment_proof || $successMessage)
-        <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl">🧾</span>
+        <div class="p-5 bg-[#FAF8F4] rounded-2xl border border-[#233D32]/15">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-[#EFEBE1] border border-[#A68B61]/30 flex items-center justify-center shrink-0 text-[#233D32] text-xl">
+                    🧾
+                </div>
                 <div>
-                    <p class="font-bold text-emerald-900 text-sm">Payment Proof Submitted</p>
-                    <p class="text-xs text-emerald-700">
-                        Method: <span class="capitalize">{{ $booking->payment_method }}</span> · Our staff is reviewing your payment.
+                    <p class="font-serif font-bold text-[#233D32] text-sm">Payment Proof Submitted</p>
+                    <p class="text-xs text-[#595D58] mt-0.5 font-light">
+                        Method: <span class="capitalize font-semibold text-[#292D29]">{{ $booking->payment_method }}</span> · Our front-desk team is verifying your payment slip.
                     </p>
                     @if($successMessage)
-                        <p class="text-xs text-emerald-600 font-semibold mt-1">✓ {{ $successMessage }}</p>
+                        <p class="text-xs text-[#233D32] font-semibold mt-1">✓ {{ $successMessage }}</p>
                     @endif
                 </div>
             </div>
         </div>
     @else
-        <div class="p-5 bg-stone-50 rounded-2xl border border-stone-200 space-y-3">
+        <div class="p-6 bg-[#FAF8F4] rounded-2xl border border-[#233D32]/15 space-y-4">
             <div class="flex items-center justify-between">
-                <h3 class="font-bold text-stone-900 text-sm">💳 Pay Online / Manual Transfer (Optional)</h3>
-                <span class="text-xs text-stone-400">or pay at check-in</span>
-            </div>
-            <p class="text-xs text-stone-600">Upload your proof of payment (screenshot/receipt) to confirm your booking immediately.</p>
-
-            <div class="grid grid-cols-2 gap-2 text-xs">
-                <div class="p-2.5 bg-white rounded-xl border border-stone-200">
-                    <p class="font-bold text-stone-900">GCash</p>
-                    <p class="text-stone-500">0912-345-6789</p>
-                    <p class="text-stone-400">Agro-Inland Resort</p>
+                <div>
+                    <span class="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A68B61]">Digital Settlement</span>
+                    <h3 class="font-serif font-bold text-[#233D32] text-sm">Submit Payment Receipt (Optional)</h3>
                 </div>
-                <div class="p-2.5 bg-white rounded-xl border border-stone-200">
-                    <p class="font-bold text-stone-900">BDO Unibank</p>
-                    <p class="text-stone-500">0012-3456-7890</p>
-                    <p class="text-stone-400">Agro-Inland Corp.</p>
+                <span class="text-[11px] text-[#777A72] font-light">or settle upon arrival</span>
+            </div>
+            <p class="text-xs text-[#595D58] font-light leading-relaxed">
+                If paying via mobile wallet or bank deposit, upload your transaction slip below for instant front-desk clearance.
+            </p>
+
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="p-3 bg-white rounded-xl border border-[#233D32]/10 shadow-2xs">
+                    <p class="font-semibold text-[#233D32]">GCash</p>
+                    <p class="font-mono text-[11px] text-[#292D29] mt-0.5">0912-345-6789</p>
+                    <p class="text-[10px] text-[#777A72]">Agro-Inland Resort</p>
+                </div>
+                <div class="p-3 bg-white rounded-xl border border-[#233D32]/10 shadow-2xs">
+                    <p class="font-semibold text-[#233D32]">BDO Unibank</p>
+                    <p class="font-mono text-[11px] text-[#292D29] mt-0.5">0012-3456-7890</p>
+                    <p class="text-[10px] text-[#777A72]">Agro-Inland Corp.</p>
                 </div>
             </div>
 
             <form wire:submit="submitProof" action="{{ route('booking.payment-proof', $booking) }}" method="POST" enctype="multipart/form-data" class="space-y-3 pt-2">
                 @csrf
-                <div>
-                    <label class="block text-xs font-semibold text-stone-600 mb-1">Payment Method</label>
-                    <select wire:model.live="method" name="payment_method" class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <div class="space-y-1">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-[#777A72]">Payment Method</label>
+                    <select wire:model.live="method" name="payment_method" class="w-full px-3.5 py-2.5 bg-white border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                         <option value="gcash">GCash</option>
                         <option value="bank_transfer">Bank Transfer</option>
                         <option value="cash">Cash on Arrival</option>
@@ -89,27 +96,27 @@ new class extends Component {
                 </div>
 
                 @if($method !== 'cash')
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-600 mb-1">Proof of Payment Image</label>
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-[#777A72]">Payment Slip Image</label>
                         <input type="file" wire:model="paymentProof" name="payment_proof" accept="image/*"
-                               class="w-full text-xs text-stone-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
-                        @error('paymentProof') <span class="text-xs text-rose-600">{{ $message }}</span> @enderror
-                        <div wire:loading wire:target="paymentProof" class="text-xs text-emerald-600 mt-1">Uploading preview... ⏳</div>
+                               class="w-full text-xs text-[#595D58] file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#233D32] file:text-[#F7F5EF] hover:file:bg-[#172A22] file:cursor-pointer">
+                        @error('paymentProof') <span class="text-xs text-rose-600 block mt-1">{{ $message }}</span> @enderror
+                        <div wire:loading wire:target="paymentProof" class="text-xs text-[#A68B61] mt-1 font-medium animate-pulse">Uploading preview...</div>
                     </div>
 
                     @if ($paymentProof)
-                        <div class="mt-2">
-                            <p class="text-xs text-stone-500 mb-1">Receipt Preview:</p>
-                            <img src="{{ $paymentProof->temporaryUrl() }}" class="w-24 h-24 object-cover rounded-xl border border-stone-200">
+                        <div class="mt-2 p-2 bg-white rounded-xl border border-[#233D32]/10 inline-block">
+                            <p class="text-[11px] text-[#777A72] mb-1">Receipt Preview:</p>
+                            <img src="{{ $paymentProof->temporaryUrl() }}" class="w-24 h-24 object-cover rounded-lg border border-[#233D32]/10">
                         </div>
                     @endif
                 @endif
 
                 <button type="submit"
                         wire:loading.attr="disabled"
-                        class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm disabled:opacity-50">
-                    <span wire:loading.remove wire:target="submitProof">Submit Payment Proof</span>
-                    <span wire:loading wire:target="submitProof">Submitting...</span>
+                        class="w-full py-3 bg-[#233D32] hover:bg-[#172A22] text-[#F7F5EF] font-semibold uppercase tracking-wider rounded-xl text-xs transition-all shadow-xs disabled:opacity-50">
+                    <span wire:loading.remove wire:target="submitProof">Submit Verification Slip</span>
+                    <span wire:loading wire:target="submitProof">Submitting Slip...</span>
                 </button>
             </form>
         </div>

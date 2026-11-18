@@ -1,7 +1,7 @@
 <x-layouts.app>
-    <x-slot:title>Search Rooms</x-slot:title>
+    <x-slot:title>Accommodations & Rates | Agro-Inland Resort</x-slot:title>
 
-    <div class="pt-24 pb-20 min-h-screen bg-stone-50">
+    <div class="pt-28 pb-24 min-h-screen bg-[#F7F5EF]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <livewire:rooms.search-catalog
                 :initialCheckIn="$checkIn"

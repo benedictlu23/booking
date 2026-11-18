@@ -30,3 +30,7 @@ Thumbs.db
 /tests
 AGENTS.md
 CLAUDE.md
+# Stray debug or accidental files
+dump()
+toArray())
+boost.json

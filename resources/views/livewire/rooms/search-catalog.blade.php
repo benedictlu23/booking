@@ -132,56 +132,58 @@ new class extends Component {
 
 <div>
     {{-- Search Header --}}
-    <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#233D32]/10 pb-6">
         <div>
-            <h1 class="text-3xl font-black text-stone-900">Find Your Perfect Room</h1>
-            <p class="text-stone-500 mt-1">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 mr-2">
-                    ⚡ Live search
-                </span>
-                <span class="font-bold text-stone-800">{{ $this->rooms->count() }}</span> room(s) available for your selected criteria
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EFEBE1] text-[#233D32] text-xs font-semibold uppercase tracking-wider mb-3">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#A68B61]"></span>
+                <span>Active Availability</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-serif font-bold text-[#233D32]">Accommodations & Suites</h1>
+            <p class="text-sm text-[#777A72] mt-1.5 font-light">
+                <span class="font-bold text-[#233D32]">{{ $this->rooms->count() }}</span> accommodation unit(s) available for your selected dates and criteria
             </p>
         </div>
 
         {{-- Quick Search Input --}}
-        <div class="w-full md:w-72 relative">
+        <div class="w-full md:w-80 relative">
             <input type="text"
                    wire:model.live.debounce.300ms="search"
-                   placeholder="Search room"
-                   class="w-full pl-9 pr-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
-            <span class="absolute left-3 top-3 text-stone-400"><x-icon-search class="size-6"/></span>
+                   placeholder="Search accommodation name or unit..."
+                   class="w-full pl-10 pr-9 py-3 bg-white border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] shadow-xs transition-all">
+            <span class="absolute left-3.5 top-3.5 text-[#A68B61]">
+                <x-icon-search class="w-4 h-4"/>
+            </span>
             @if($search)
-                <button wire:click="$set('search', '')" class="absolute right-3 top-2.5 text-stone-400 hover:text-stone-600 text-sm">✕</button>
+                <button wire:click="$set('search', '')" class="absolute right-3.5 top-3 text-[#777A72] hover:text-[#233D32] text-sm">✕</button>
             @endif
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {{-- Filters Sidebar --}}
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 sticky top-24 space-y-4">
-                <div class="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <h2 class="font-bold text-stone-900 text-base">Refine Search</h2>
-                    <button wire:click="resetFilters" type="button" class="text-xs text-emerald-600 hover:text-emerald-700 font-semibold">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {{-- Filters Sidebar (4 cols) --}}
+        <div class="lg:col-span-4 xl:col-span-3">
+            <div class="bg-white rounded-2xl p-6 shadow-[0_4px_24px_-4px_rgba(35,61,50,0.06)] border border-[#233D32]/10 sticky top-28 space-y-5">
+                <div class="flex items-center justify-between border-b border-[#233D32]/10 pb-3">
+                    <h2 class="font-serif font-bold text-[#233D32] text-lg">Filter Stay</h2>
+                    <button wire:click="resetFilters" type="button" class="text-xs text-[#A68B61] hover:text-[#8C734D] font-semibold uppercase tracking-wider">
                         Reset All
                     </button>
                 </div>
 
                 {{-- Stay Dates --}}
-                <div>
-                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Check In</label>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Check In</label>
                     <input type="date"
                            wire:model.live="checkIn"
                            min="{{ today()->format('Y-m-d') }}"
-                           class="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                           class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                 </div>
 
-                <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide">Check Out</label>
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Check Out</label>
                         @if($bookingType === 'day_pass')
-                            <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-[#8C734D] bg-[#EFEBE1] px-2 py-0.5 rounded-full border border-[#A68B61]/30">
                                 Locked (Day Pass)
                             </span>
                         @endif
@@ -191,60 +193,60 @@ new class extends Component {
                            @disabled($bookingType === 'day_pass')
                            @readonly($bookingType === 'day_pass')
                            min="{{ $bookingType === 'day_pass' ? $checkIn : today()->addDay()->format('Y-m-d') }}"
-                           class="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 {{ $bookingType === 'day_pass' ? 'bg-stone-100 text-stone-500 cursor-not-allowed border-dashed' : '' }}">
+                           class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] {{ $bookingType === 'day_pass' ? 'opacity-70 cursor-not-allowed border-dashed bg-[#EFEBE1]' : '' }}">
                     @if($bookingType === 'day_pass')
-                        <p class="text-[11px] text-amber-600 mt-1">Same-day departure for Day Pass.</p>
+                        <p class="text-[11px] text-[#8C734D] mt-1 font-light">Same-day departure for Day Pass.</p>
                     @endif
                 </div>
 
                 {{-- Guests --}}
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Adults</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Adults</label>
                         <input type="number"
                                wire:model.live="adults"
                                min="1" max="20"
-                               class="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Children</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Children</label>
                         <input type="number"
                                wire:model.live="children"
                                min="0" max="20"
-                               class="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                     </div>
                 </div>
 
                 {{-- Pets --}}
-                <div>
-                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Pets 🐾</label>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Pets 🐾</label>
                     <input type="number"
                            wire:model.live="pets"
                            min="0" max="10"
-                           class="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                           class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                     @if($pets > 0 && $petPolicy)
-                        <p class="mt-2 text-xs text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                        <div class="mt-2 text-xs text-[#233D32] bg-[#EFEBE1] p-3 rounded-xl border border-[#233D32]/10 leading-relaxed font-light">
                             🐾 {{ $petPolicy }}
-                        </p>
+                        </div>
                     @endif
                 </div>
 
                 {{-- Booking Type --}}
-                <div>
-                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Booking Type</label>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Accommodation Type</label>
                     <select wire:model.live="bookingType"
-                            class="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="">All Types</option>
+                            class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
+                        <option value="">All Accommodation Types</option>
                         <option value="overnight">Overnight Stay</option>
                         <option value="day_pass">Day Pass Only</option>
                     </select>
                 </div>
 
                 {{-- Category --}}
-                <div>
-                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Category</label>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Category</label>
                     <select wire:model.live="categoryId"
-                            class="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                         <option value="">All Categories</option>
                         @foreach($this->categories as $category)
                             <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -253,88 +255,92 @@ new class extends Component {
                 </div>
 
                 {{-- Price Range --}}
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Min (₱)</label>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Price Range (₱)</label>
+                    <div class="grid grid-cols-2 gap-2">
                         <input type="number"
                                wire:model.live.debounce.300ms="minPrice"
-                               placeholder="Min"
-                               class="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Max (₱)</label>
+                               placeholder="Min (₱)"
+                               class="w-full px-3 py-2 border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                         <input type="number"
                                wire:model.live.debounce.300ms="maxPrice"
-                               placeholder="Max"
-                               class="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               placeholder="Max (₱)"
+                               class="w-full px-3 py-2 border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                     </div>
                 </div>
 
-                <div wire:loading class="w-full text-center py-2 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-xl">
-                    Updating results... ⏳
+                <div wire:loading class="w-full text-center py-2.5 text-xs font-semibold text-[#233D32] bg-[#EFEBE1] rounded-xl border border-[#233D32]/10 animate-pulse">
+                    Refreshing availability...
                 </div>
             </div>
         </div>
 
-        {{-- Room Results --}}
-        <div class="lg:col-span-3">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {{-- Room Results Grid (8 cols) --}}
+        <div class="lg:col-span-8 xl:col-span-9">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 @forelse($this->rooms as $room)
-                    <div class="group bg-white rounded-2xl overflow-hidden shadow-md shadow-stone-200/60 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
+                    <div class="group bg-white rounded-2xl overflow-hidden border border-[#233D32]/10 shadow-[0_4px_20px_-4px_rgba(35,61,50,0.06)] hover:shadow-[0_12px_35px_-6px_rgba(35,61,50,0.12)] transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
                         <div>
-                            {{-- Room Image --}}
-                            <div class="relative h-52 overflow-hidden bg-stone-100">
+                            {{-- Image Container --}}
+                            <div class="relative h-56 overflow-hidden bg-[#EFEBE1]">
                                 @if($room->photos->isNotEmpty())
-                                    <img src="{{$room->photos->first()->path }}"
+                                    <img src="{{ $room->photos->first()->path }}"
                                          alt="{{ $room->name }}"
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out">
                                 @else
-                                    <img src="{{asset('storage/assets/AIR-LOGO.png') }}"
-                                         alt=""
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <div class="w-full h-full flex items-center justify-center bg-[#FAF8F4] p-6">
+                                        <img src="{{ asset('storage/assets/AIR-LOGO.png') }}"
+                                             alt="Room"
+                                             class="w-20 h-20 object-contain opacity-70 group-hover:scale-105 transition-transform duration-500">
+                                    </div>
                                 @endif
-                                <div class="absolute top-3 left-3 flex gap-2">
-                                    <span class="px-2.5 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-stone-700 rounded-lg">
+                                <div class="absolute top-3.5 left-3.5 flex gap-2">
+                                    <span class="px-2.5 py-1 bg-[#172A22]/85 backdrop-blur-md text-[11px] uppercase tracking-wider font-semibold text-[#F7F5EF] rounded-lg border border-white/10">
                                         {{ $room->category?->name }}
                                     </span>
                                     @if($room->allows_pets)
-                                        <span class="px-2.5 py-1 bg-amber-100/90 text-amber-800 text-xs font-semibold rounded-lg">🐾 Pet OK</span>
+                                        <span class="px-2 py-1 bg-[#EFEBE1]/90 backdrop-blur-md text-[#233D32] text-[11px] font-semibold rounded-lg border border-[#233D32]/10 shadow-xs">🐾 Pet OK</span>
                                     @endif
                                 </div>
                             </div>
 
                             <div class="p-5">
-                                <div class="flex justify-between items-start mb-3">
+                                <div class="flex justify-between items-start gap-3 mb-2.5">
                                     <div>
-                                        <h3 class="font-bold text-stone-900 text-lg">{{ $room->name }}</h3>
-                                        <p class="text-xs text-stone-400">Room {{ $room->room_number }}</p>
+                                        <h3 class="font-serif font-bold text-[#233D32] text-xl leading-snug group-hover:text-[#A68B61] transition-colors">
+                                            {{ $room->name }}
+                                        </h3>
+                                        <p class="text-xs text-[#777A72] font-mono mt-0.5 tracking-wide">Unit {{ $room->room_number }}</p>
                                     </div>
-                                    <div class="text-right">
-                                        <p class="text-xl font-black text-emerald-600">₱{{ number_format($room->base_price, 0) }}</p>
-                                        <p class="text-xs text-stone-400">/ night</p>
+                                    <div class="text-right shrink-0">
+                                        <p class="font-serif font-bold text-2xl text-[#233D32]">₱{{ number_format($room->base_price, 0) }}</p>
+                                        <p class="text-[10px] uppercase tracking-wider text-[#777A72]">/ night</p>
                                     </div>
                                 </div>
 
                                 @if($room->description)
-                                    <p class="text-sm text-stone-500 mb-3 line-clamp-2">{{ $room->description }}</p>
+                                    <p class="text-xs text-[#595D58] mb-4 line-clamp-2 leading-relaxed font-light">{{ $room->description }}</p>
                                 @endif
 
-                                {{-- Amenities --}}
+                                {{-- Amenities Tags --}}
                                 @if($room->amenities->isNotEmpty())
-                                    <div class="flex flex-wrap gap-1 mb-4">
-                                        @foreach($room->amenities->take(4) as $amenity)
-                                            <span class="px-2 py-0.5 bg-stone-100 text-stone-600 text-xs rounded-lg">{{ $amenity->name }}</span>
+                                    <div class="flex flex-wrap gap-1.5 mb-2">
+                                        @foreach($room->amenities->take(3) as $amenity)
+                                            <span class="px-2.5 py-0.5 bg-[#FAF8F4] text-[#233D32] border border-[#233D32]/10 text-[11px] rounded-md font-medium">{{ $amenity->name }}</span>
                                         @endforeach
-                                        @if($room->amenities->count() > 4)
-                                            <span class="px-2 py-0.5 bg-stone-100 text-stone-500 text-xs rounded-lg">+{{ $room->amenities->count() - 4 }} more</span>
+                                        @if($room->amenities->count() > 3)
+                                            <span class="px-2 py-0.5 bg-[#FAF8F4] text-[#777A72] border border-[#233D32]/10 text-[11px] rounded-md">+{{ $room->amenities->count() - 3 }} more</span>
                                         @endif
                                     </div>
                                 @endif
                             </div>
                         </div>
 
-                        <div class="p-5 pt-0 border-t border-stone-50 flex items-center justify-between">
-                            <span class="text-xs text-stone-500 font-medium">👥 Up to {{ $room->capacity_adults }} adults</span>
+                        <div class="p-5 pt-3 border-t border-[#233D32]/10 flex items-center justify-between bg-[#FAF8F4]">
+                            <span class="text-xs text-[#595D58] font-medium flex items-center gap-1.5">
+                                <x-icon-users class="w-3.5 h-3.5 text-[#A68B61]"/>
+                                Up to {{ $room->capacity_adults }} adults
+                            </span>
                             <a href="{{ route('rooms.show', [
                                 'room' => $room->id,
                                 'check_in' => $checkIn,
@@ -344,23 +350,25 @@ new class extends Component {
                                 'pets' => $pets,
                                 'booking_type' => $bookingType
                             ]) }}"
-                               class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
-                                Book Now →
+                               class="px-4 py-2 bg-[#233D32] hover:bg-[#172A22] text-[#F7F5EF] text-xs font-semibold uppercase tracking-wider rounded-xl transition-all shadow-xs hover:-translate-y-0.5">
+                                View Details →
                             </a>
                         </div>
                     </div>
                 @empty
-                    <div class="col-span-2 text-center py-20 bg-white rounded-2xl border border-stone-100">
+                    <div class="col-span-2 text-center py-20 bg-white rounded-2xl border border-[#233D32]/10 p-8 shadow-xs">
                         <div class="flex flex-col items-center justify-center w-full">
-                            <x-icon-search-alert class="size-15 text-stone-500" />
+                            <x-icon-search-alert class="w-12 h-12 text-[#A68B61] opacity-80" />
                         </div>
-                        <h3 class="font-bold text-stone-700 text-lg mt-3">No matching rooms found</h3>
-                        <p class="text-sm text-stone-400 mt-1 max-w-sm mx-auto">Try adjusting your stay dates, price filters, or guest capacity.</p>
+                        <h3 class="font-serif font-bold text-[#233D32] text-xl mt-4">No matching rooms found</h3>
+                        <p class="text-xs text-[#777A72] mt-1.5 max-w-sm mx-auto font-light leading-relaxed">
+                            We couldn't find available rooms matching all selected filters. Try broadening your dates or guest capacity.
+                        </p>
                         <button wire:click="resetFilters"
-                                class="mt-4 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition-colors">
-                            Reset Filters
+                                class="mt-5 px-6 py-2.5 bg-[#233D32] text-[#F7F5EF] text-xs font-semibold uppercase tracking-widest rounded-xl hover:bg-[#172A22] transition-all shadow-xs">
+                            Reset Search Filters
                         </button>
-</div>
+                    </div>
                 @endforelse
             </div>
         </div>

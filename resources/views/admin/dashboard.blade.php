@@ -1,134 +1,169 @@
 <x-layouts.admin>
-    <x-slot:heading>Dashboard</x-slot:heading>
-    <x-slot:subheading>Welcome back, {{ auth()->user()->name }}</x-slot:subheading>
+    <x-slot:heading>Executive Operations Dashboard</x-slot:heading>
+    <x-slot:subheading>Agro-Inland Resort daily performance, guest movement, and occupancy metrics</x-slot:subheading>
 
     {{-- Stats Grid --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-        @php
-            $stats = [
-                ['label' => 'Monthly Revenue', 'value' => '₱'.number_format($totalRevenue, 2), 'icon' => '💰', 'color' => 'emerald', 'sub' => 'This month'],
-                ['label' => 'Total Bookings', 'value' => $totalBookings, 'icon' => '📋', 'color' => 'blue', 'sub' => 'This month'],
-                ['label' => 'Occupancy Rate', 'value' => $occupancyRate.'%', 'icon' => '🏨', 'color' => 'amber', 'sub' => $occupiedRooms.' of '.$totalRooms.' rooms'],
-                ['label' => 'Pending Bookings', 'value' => $pendingBookings->count(), 'icon' => '⏳', 'color' => 'rose', 'sub' => 'Requires action'],
-            ];
-        @endphp
-        @foreach($stats as $stat)
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-{{ $stat['color'] }}-50 rounded-xl flex items-center justify-center text-2xl">
-                        {{ $stat['icon'] }}
-                    </div>
-                    <span class="text-xs font-medium text-stone-400">{{ $stat['sub'] }}</span>
-                </div>
-                <p class="text-3xl font-black text-stone-900">{{ $stat['value'] }}</p>
-                <p class="text-sm text-stone-500 mt-1">{{ $stat['label'] }}</p>
+        {{-- Stat 1: Revenue --}}
+        <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10 relative overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Financial Metric</span>
+                <span class="text-xs text-[#777A72]">Current Month</span>
             </div>
-        @endforeach
+            <p class="text-2xl sm:text-3xl font-serif font-bold text-[#233D32]">₱{{ number_format($totalRevenue, 2) }}</p>
+            <p class="text-xs text-[#777A72] mt-1 font-light">Gross Monthly Revenue</p>
+        </div>
+
+        {{-- Stat 2: Bookings --}}
+        <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10 relative overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Reservation Volume</span>
+                <span class="text-xs text-[#777A72]">This Month</span>
+            </div>
+            <p class="text-2xl sm:text-3xl font-serif font-bold text-[#233D32]">{{ $totalBookings }}</p>
+            <p class="text-xs text-[#777A72] mt-1 font-light">Total Confirmed & Completed</p>
+        </div>
+
+        {{-- Stat 3: Occupancy --}}
+        <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10 relative overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Resort Capacity</span>
+                <span class="text-xs text-[#777A72]">{{ $occupiedRooms }} of {{ $totalRooms }} units</span>
+            </div>
+            <p class="text-2xl sm:text-3xl font-serif font-bold text-[#233D32]">{{ $occupancyRate }}%</p>
+            <p class="text-xs text-[#777A72] mt-1 font-light">Live Occupancy Rate</p>
+        </div>
+
+        {{-- Stat 4: Pending Bookings --}}
+        <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10 relative overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Action Required</span>
+                <span class="text-xs font-semibold {{ $pendingBookings->count() > 0 ? 'text-amber-700' : 'text-emerald-700' }}">
+                    {{ $pendingBookings->count() > 0 ? 'Awaiting Review' : 'All Clear' }}
+                </span>
+            </div>
+            <p class="text-2xl sm:text-3xl font-serif font-bold text-[#233D32]">{{ $pendingBookings->count() }}</p>
+            <p class="text-xs text-[#777A72] mt-1 font-light">Pending Guest Reservations</p>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        {{-- Today's Activity --}}
-        <div class="xl:col-span-2 space-y-5">
+        {{-- Main Activity Column --}}
+        <div class="xl:col-span-2 space-y-6">
 
-            {{-- Revenue Chart (simple bar chart) --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="font-bold text-stone-900">Revenue Trend</h3>
-                    <span class="text-xs text-stone-400">Last 6 months</span>
+            {{-- Revenue Chart --}}
+            <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10">
+                <div class="flex items-center justify-between mb-6 border-b border-[#233D32]/10 pb-4">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Performance Trend</span>
+                        <h3 class="font-serif font-bold text-[#233D32] text-lg">Revenue Trajectory</h3>
+                    </div>
+                    <span class="text-xs text-[#777A72] font-light">Past 6 Calendar Months</span>
                 </div>
                 @php
                     $maxRev = $revenueChartData->max('revenue') ?: 1;
                 @endphp
-                <div class="flex items-end gap-3 h-40">
+                <div class="flex items-end gap-3 sm:gap-6 h-44 pt-4 px-2">
                     @foreach($revenueChartData as $item)
-                        <div class="flex-1 flex flex-col items-center gap-2">
-                            <div class="w-full bg-emerald-500 rounded-t-lg transition-all hover:bg-emerald-600"
-                                 style="height: {{ max(4, ($item['revenue'] / $maxRev) * 100) }}%"
+                        <div class="flex-1 flex flex-col items-center gap-2.5 h-full justify-end group">
+                            <span class="text-[10px] font-mono text-[#777A72] opacity-0 group-hover:opacity-100 transition-opacity">
+                                ₱{{ number_format($item['revenue'] / 1000, 1) }}k
+                            </span>
+                            <div class="w-full max-w-[48px] bg-[#233D32] hover:bg-[#A68B61] rounded-t-lg transition-all duration-300 shadow-xs"
+                                 style="height: {{ max(6, ($item['revenue'] / $maxRev) * 100) }}%"
                                  title="₱{{ number_format($item['revenue'], 2) }}"></div>
-                            <span class="text-xs text-stone-400 whitespace-nowrap">{{ $item['month'] }}</span>
+                            <span class="text-[11px] font-medium text-[#777A72] uppercase tracking-wider whitespace-nowrap">{{ $item['month'] }}</span>
                         </div>
                     @endforeach
                 </div>
             </div>
 
             {{-- Today's Check-ins --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-stone-900">Today's Check-Ins</h3>
-                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg">
-                        {{ $todaysCheckIns->count() }} expected
+            <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10">
+                <div class="flex items-center justify-between mb-4 border-b border-[#233D32]/10 pb-4">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Arrivals</span>
+                        <h3 class="font-serif font-bold text-[#233D32] text-lg">Today's Check-Ins</h3>
+                    </div>
+                    <span class="px-3 py-1 bg-[#233D32]/10 text-[#233D32] text-xs font-semibold rounded-lg">
+                        {{ $todaysCheckIns->count() }} Expected
                     </span>
                 </div>
                 @forelse($todaysCheckIns as $booking)
-                    <div class="flex items-center justify-between py-3 border-b border-stone-50 last:border-0">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3.5 border-b border-[#233D32]/5 last:border-0">
                         <div>
-                            <p class="font-semibold text-stone-900 text-sm">{{ $booking->guest_name }}</p>
-                            <p class="text-xs text-stone-500">Room {{ $booking->room?->room_number }} · {{ $booking->booking_code }}</p>
+                            <p class="font-serif font-bold text-[#233D32] text-sm">{{ $booking->guest_name }}</p>
+                            <p class="text-xs text-[#777A72] font-mono">Unit {{ $booking->room?->room_number }} · {{ $booking->booking_code }}</p>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="px-2 py-1 text-xs rounded-lg font-medium
-                                {{ $booking->status === 'confirmed' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700' }}">
+                        <div class="flex items-center gap-2.5">
+                            <span class="px-2.5 py-1 text-[11px] uppercase tracking-wider rounded-lg font-semibold border
+                                {{ $booking->status === 'confirmed' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200' }}">
                                 {{ ucfirst($booking->status) }}
                             </span>
                             <form method="POST" action="{{ route('admin.bookings.check-in', $booking) }}">
                                 @csrf
-                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors">
+                                <button type="submit" class="px-4 py-1.5 bg-[#233D32] hover:bg-[#172A22] text-[#F7F5EF] text-xs uppercase tracking-wider font-semibold rounded-lg transition-all shadow-2xs">
                                     Check In
                                 </button>
                             </form>
                         </div>
                     </div>
                 @empty
-                    <p class="text-sm text-stone-400 text-center py-4">No check-ins scheduled for today.</p>
+                    <p class="text-xs text-[#777A72] text-center py-6 font-light">No guest check-ins scheduled for today.</p>
                 @endforelse
             </div>
 
-            {{-- Recent Bookings --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-stone-900">Recent Bookings</h3>
-                    <a href="{{ route('admin.bookings.index') }}" class="text-sm text-emerald-600 font-medium hover:underline">View all</a>
+            {{-- Recent Bookings Table --}}
+            <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10">
+                <div class="flex items-center justify-between mb-4 border-b border-[#233D32]/10 pb-4">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Master Register</span>
+                        <h3 class="font-serif font-bold text-[#233D32] text-lg">Recent Folio Bookings</h3>
+                    </div>
+                    <a href="{{ route('admin.bookings.index') }}" class="text-xs uppercase tracking-wider font-semibold text-[#233D32] hover:text-[#A68B61] transition-colors">
+                        View Complete Register →
+                    </a>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="w-full text-xs">
                         <thead>
-                            <tr class="text-left text-xs text-stone-400 border-b border-stone-100">
-                                <th class="pb-3 font-medium">Code</th>
-                                <th class="pb-3 font-medium">Guest</th>
-                                <th class="pb-3 font-medium">Room</th>
-                                <th class="pb-3 font-medium">Check-In</th>
-                                <th class="pb-3 font-medium">Status</th>
-                                <th class="pb-3 font-medium">Total</th>
+                            <tr class="text-left text-[10px] uppercase tracking-wider text-[#777A72] border-b border-[#233D32]/10">
+                                <th class="pb-3 font-semibold">Folio Code</th>
+                                <th class="pb-3 font-semibold">Guest</th>
+                                <th class="pb-3 font-semibold">Unit</th>
+                                <th class="pb-3 font-semibold">Check-In</th>
+                                <th class="pb-3 font-semibold">Status</th>
+                                <th class="pb-3 font-semibold text-right">Total</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-stone-50">
+                        <tbody class="divide-y divide-[#233D32]/5">
                             @foreach($recentBookings as $booking)
-                                <tr class="hover:bg-stone-50 transition-colors">
-                                    <td class="py-3">
+                                <tr class="hover:bg-[#FAF8F4] transition-colors">
+                                    <td class="py-3 font-mono">
                                         <a href="{{ route('admin.bookings.show', $booking) }}"
-                                           class="font-mono text-xs text-emerald-600 font-semibold hover:underline">
+                                           class="text-[#A68B61] font-bold hover:underline">
                                             {{ $booking->booking_code }}
                                         </a>
                                     </td>
-                                    <td class="py-3 text-stone-700">{{ $booking->guest_name }}</td>
-                                    <td class="py-3 text-stone-500">{{ $booking->room?->room_number }}</td>
-                                    <td class="py-3 text-stone-500">{{ $booking->check_in->format('M d') }}</td>
+                                    <td class="py-3 font-medium text-[#292D29]">{{ $booking->guest_name }}</td>
+                                    <td class="py-3 text-[#777A72]">#{{ $booking->room?->room_number }}</td>
+                                    <td class="py-3 text-[#777A72]">{{ $booking->check_in->format('M d, Y') }}</td>
                                     <td class="py-3">
                                         @php
                                             $statusColors = [
-                                                'pending' => 'bg-amber-100 text-amber-700',
-                                                'confirmed' => 'bg-blue-100 text-blue-700',
-                                                'checked_in' => 'bg-emerald-100 text-emerald-700',
-                                                'checked_out' => 'bg-stone-100 text-stone-700',
-                                                'cancelled' => 'bg-red-100 text-red-700',
+                                                'pending' => 'bg-amber-50 text-amber-800 border-amber-200',
+                                                'confirmed' => 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                                                'checked_in' => 'bg-[#233D32]/10 text-[#233D32] border-[#233D32]/20',
+                                                'checked_out' => 'bg-stone-100 text-stone-700 border-stone-200',
+                                                'cancelled' => 'bg-rose-50 text-rose-800 border-rose-200',
                                             ];
                                         @endphp
-                                        <span class="px-2 py-0.5 rounded-lg text-xs font-medium {{ $statusColors[$booking->status] ?? 'bg-stone-100 text-stone-600' }}">
+                                        <span class="px-2.5 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-semibold border {{ $statusColors[$booking->status] ?? 'bg-stone-100 text-stone-700' }}">
                                             {{ ucfirst(str_replace('_', ' ', $booking->status)) }}
                                         </span>
                                     </td>
-                                    <td class="py-3 font-semibold text-stone-900">₱{{ number_format($booking->total_price, 2) }}</td>
+                                    <td class="py-3 font-serif font-bold text-right text-[#233D32]">₱{{ number_format($booking->total_price, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -137,51 +172,67 @@
             </div>
         </div>
 
-        {{-- Right Column --}}
-        <div class="space-y-5">
+        {{-- Operational Right Column --}}
+        <div class="space-y-6">
 
             {{-- Quick Actions --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h3 class="font-bold text-stone-900 mb-4">Quick Actions</h3>
-                <div class="space-y-2">
+            <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10">
+                <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61] block mb-1">Front Desk</span>
+                <h3 class="font-serif font-bold text-[#233D32] text-lg mb-4">Quick Operations</h3>
+                <div class="space-y-2.5">
                     <a href="{{ route('admin.bookings.create') }}"
-                       class="flex items-center gap-3 p-3 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors text-sm font-medium text-emerald-800">
-                        <span class="text-xl">➕</span> New Walk-In Booking
+                       class="flex items-center justify-between p-3.5 bg-[#FAF8F4] hover:bg-[#EFEBE1] rounded-xl border border-[#233D32]/10 transition-colors group">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-lg bg-[#233D32] text-[#F7F5EF] flex items-center justify-center font-bold text-sm">+</span>
+                            <span class="text-xs font-semibold text-[#233D32] uppercase tracking-wider">Walk-In Reservation</span>
+                        </div>
+                        <span class="text-[#A68B61] group-hover:translate-x-0.5 transition-transform">→</span>
                     </a>
                     <a href="{{ route('admin.bookings.matrix') }}"
-                       class="flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors text-sm font-medium text-blue-800">
-                        <span class="text-xl">📅</span> View Reservation Matrix
+                       class="flex items-center justify-between p-3.5 bg-[#FAF8F4] hover:bg-[#EFEBE1] rounded-xl border border-[#233D32]/10 transition-colors group">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-lg bg-[#FAF8F4] border border-[#233D32]/15 text-[#233D32] flex items-center justify-center font-bold text-sm">📅</span>
+                            <span class="text-xs font-semibold text-[#233D32] uppercase tracking-wider">Reservation Matrix</span>
+                        </div>
+                        <span class="text-[#A68B61] group-hover:translate-x-0.5 transition-transform">→</span>
                     </a>
                     <a href="{{ route('admin.rooms.index') }}"
-                       class="flex items-center gap-3 p-3 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors text-sm font-medium text-amber-800">
-                        <span class="text-xl">🏨</span> Manage Rooms
+                       class="flex items-center justify-between p-3.5 bg-[#FAF8F4] hover:bg-[#EFEBE1] rounded-xl border border-[#233D32]/10 transition-colors group">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-lg bg-[#FAF8F4] border border-[#233D32]/15 text-[#233D32] flex items-center justify-center font-bold text-sm">🏡</span>
+                            <span class="text-xs font-semibold text-[#233D32] uppercase tracking-wider">Room Inventory</span>
+                        </div>
+                        <span class="text-[#A68B61] group-hover:translate-x-0.5 transition-transform">→</span>
                     </a>
                 </div>
             </div>
 
             {{-- Today's Check-Outs --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-stone-900">Today's Check-Outs</h3>
-                    <span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded-lg">
-                        {{ $todaysCheckOuts->count() }} total
+            <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10">
+                <div class="flex items-center justify-between mb-4 border-b border-[#233D32]/10 pb-4">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Departures</span>
+                        <h3 class="font-serif font-bold text-[#233D32] text-lg">Today's Check-Outs</h3>
+                    </div>
+                    <span class="px-2.5 py-1 bg-[#FAF8F4] text-[#A68B61] border border-[#A68B61]/30 text-xs font-semibold rounded-lg">
+                        {{ $todaysCheckOuts->count() }} Total
                     </span>
                 </div>
                 @forelse($todaysCheckOuts as $booking)
-                    <div class="flex items-center justify-between py-3 border-b border-stone-50 last:border-0">
+                    <div class="flex items-center justify-between py-3 border-b border-[#233D32]/5 last:border-0">
                         <div>
-                            <p class="font-semibold text-stone-900 text-sm">{{ $booking->guest_name }}</p>
-                            <p class="text-xs text-stone-500">Room {{ $booking->room?->room_number }} · {{ $booking->booking_code }}</p>
+                            <p class="font-serif font-bold text-[#233D32] text-sm">{{ $booking->guest_name }}</p>
+                            <p class="text-xs text-[#777A72] font-mono">Unit {{ $booking->room?->room_number }} · {{ $booking->booking_code }}</p>
                         </div>
                         <div class="flex items-center gap-2">
                             @if($booking->status === 'checked_out')
-                                <span class="px-2.5 py-1 bg-stone-100 text-stone-600 rounded-lg text-xs font-semibold">
-                                    ✓ Checked Out
+                                <span class="px-2.5 py-1 bg-stone-100 text-stone-700 rounded-lg text-[10px] uppercase tracking-wider font-semibold">
+                                    Completed
                                 </span>
                             @else
                                 <form method="POST" action="{{ route('admin.bookings.check-out', $booking) }}">
                                     @csrf
-                                    <button type="submit" class="px-3 py-1.5 bg-amber-500 text-white text-xs font-semibold rounded-lg hover:bg-amber-600 transition-colors">
+                                    <button type="submit" class="px-3.5 py-1.5 bg-[#A68B61] hover:bg-[#8C734D] text-[#172A22] text-xs font-semibold uppercase tracking-wider rounded-lg transition-all shadow-2xs">
                                         Check Out
                                     </button>
                                 </form>
@@ -189,35 +240,40 @@
                         </div>
                     </div>
                 @empty
-                    <p class="text-sm text-stone-400 text-center py-4">No check-outs today.</p>
+                    <p class="text-xs text-[#777A72] text-center py-6 font-light">No guest departures scheduled for today.</p>
                 @endforelse
             </div>
 
-            {{-- Frequent Guests / Top Customers --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-stone-900">Top Customers 🏆</h3>
-                    <a href="{{ route('admin.customers.index') }}" class="text-xs text-emerald-600 font-medium hover:underline">View All</a>
+            {{-- Top Frequent Guests --}}
+            <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10">
+                <div class="flex items-center justify-between mb-4 border-b border-[#233D32]/10 pb-4">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Loyalty</span>
+                        <h3 class="font-serif font-bold text-[#233D32] text-lg">Top Frequent Guests</h3>
+                    </div>
+                    <a href="{{ route('admin.customers.index') }}" class="text-xs uppercase tracking-wider font-semibold text-[#233D32] hover:text-[#A68B61] transition-colors">Directory →</a>
                 </div>
-                @foreach($frequentGuests as $index => $guest)
-                    <a href="{{ route('admin.customers.show', $guest) }}" class="flex items-center gap-3 py-2.5 border-b border-stone-50 last:border-0 hover:bg-stone-50 rounded-xl px-2 transition-colors">
-                        <span class="w-6 text-center font-black text-stone-400 text-sm">{{ $index + 1 }}</span>
-                        @if($guest->avatar)
-                            <img src="{{ $guest->avatar }}" alt="{{ $guest->name }}" class="w-8 h-8 rounded-full object-cover">
-                        @else
-                            <div class="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                                {{ substr($guest->name, 0, 1) }}
+                <div class="space-y-2.5">
+                    @foreach($frequentGuests as $index => $guest)
+                        <a href="{{ route('admin.customers.show', $guest) }}" class="flex items-center gap-3 p-2 hover:bg-[#FAF8F4] rounded-xl border border-transparent hover:border-[#233D32]/10 transition-all">
+                            <span class="w-5 text-center font-serif font-bold text-[#A68B61] text-xs">{{ $index + 1 }}</span>
+                            @if($guest->avatar)
+                                <img src="{{ $guest->avatar }}" alt="{{ $guest->name }}" class="w-8 h-8 rounded-lg object-cover border border-[#233D32]/10">
+                            @else
+                                <div class="w-8 h-8 bg-[#233D32] rounded-lg flex items-center justify-center text-[#F7F5EF] font-serif font-bold text-xs">
+                                    {{ substr($guest->name, 0, 1) }}
+                                </div>
+                            @endif
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold text-[#233D32] truncate">{{ $guest->name }}</p>
+                                <p class="text-[11px] text-[#777A72]">₱{{ number_format($guest->bookings_sum_total_price ?? 0, 0) }} total spent</p>
                             </div>
-                        @endif
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-stone-900 truncate">{{ $guest->name }}</p>
-                            <p class="text-xs text-stone-400">₱{{ number_format($guest->bookings_sum_total_price ?? 0, 0) }} spent</p>
-                        </div>
-                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg shrink-0">
-                            {{ $guest->bookings_count ?? $guest->visit_count }} stays
-                        </span>
-                    </a>
-                @endforeach
+                            <span class="px-2 py-0.5 bg-[#FAF8F4] border border-[#233D32]/10 text-[#233D32] text-[10px] uppercase tracking-wider font-semibold rounded-md shrink-0">
+                                {{ $guest->bookings_count ?? $guest->visit_count }} stays
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>

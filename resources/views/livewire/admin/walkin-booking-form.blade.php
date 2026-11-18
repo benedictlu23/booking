@@ -375,44 +375,43 @@ new class extends Component {
 <div class="space-y-6">
     <form wire:submit="submitWalkin" class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        {{-- Left 2 Cols: Stay Dates, Room Selection, Guest Info --}}
+        {{-- Left 2 Columns: Schedule, Room Selection, Guest Details --}}
         <div class="xl:col-span-2 space-y-6">
 
-            {{-- 1. Stay Dates & Times --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 space-y-4">
-                <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+            {{-- 1. Stay Schedule & Type --}}
+            <div class="bg-white rounded-2xl p-6 sm:p-7 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10 space-y-5">
+                <div class="flex items-center justify-between border-b border-[#233D32]/10 pb-4">
                     <div>
-                        <h3 class="font-bold text-stone-900 text-base">1. Stay Schedule & Type</h3>
-                        <p class="text-xs text-stone-500">Pick check-in and check-out to instantly see available rooms.</p>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Step 1</span>
+                        <h3 class="font-serif font-bold text-[#233D32] text-lg">Stay Schedule & Duration</h3>
                     </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold {{ $bookingType === 'overnight' ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800' }}">
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider {{ $bookingType === 'overnight' ? 'bg-[#233D32]/10 text-[#233D32]' : 'bg-[#EFEBE1] text-[#A68B61]' }}">
                         {{ $bookingType === 'overnight' ? $this->nights . ' Night(s)' : 'Day Pass' }}
                     </span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Booking Type *</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Booking Type *</label>
                         <select wire:model.live="bookingType"
-                                class="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                             <option value="overnight">Overnight Stay</option>
                             <option value="day_pass">Day Pass (Same Day)</option>
                         </select>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Check-In Date & Time *</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Check-In *</label>
                         <input type="datetime-local" wire:model.live="checkIn" required
-                               class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('checkIn') border-red-400 @enderror">
-                        @error('checkIn') <span class="text-[11px] text-red-600">{{ $message }}</span> @enderror
+                               class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] @error('checkIn') border-rose-400 bg-rose-50 @enderror">
+                        @error('checkIn') <span class="text-[11px] text-rose-600 font-medium">{{ $message }}</span> @enderror
                     </div>
 
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-xs font-semibold text-stone-700">Check-Out Date & Time *</label>
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Check-Out *</label>
                             @if($bookingType === 'day_pass')
-                                <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-[#8C734D] bg-[#EFEBE1] px-2 py-0.5 rounded-full border border-[#A68B61]/30">
                                     Locked (Day Pass)
                                 </span>
                             @endif
@@ -420,26 +419,26 @@ new class extends Component {
                         <input type="datetime-local" wire:model.live="checkOut" required
                                @disabled($bookingType === 'day_pass')
                                @readonly($bookingType === 'day_pass')
-                               class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('checkOut') border-red-400 @enderror {{ $bookingType === 'day_pass' ? 'bg-stone-100 text-stone-500 cursor-not-allowed border-dashed' : '' }}">
+                               class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] @error('checkOut') border-rose-400 bg-rose-50 @enderror {{ $bookingType === 'day_pass' ? 'bg-[#EFEBE1] text-[#777A72] cursor-not-allowed select-none opacity-80' : '' }}">
                         @if($bookingType === 'day_pass')
-                            <p class="text-[11px] text-amber-600 mt-1">Same-day departure (standard 5:00 PM check-out).</p>
+                            <p class="text-[11px] text-[#8C734D] font-light">Same-day departure (standard 5:00 PM check-out).</p>
                         @endif
-                        @error('checkOut') <span class="text-[11px] text-red-600">{{ $message }}</span> @enderror
+                        @error('checkOut') <span class="text-[11px] text-rose-600 font-medium">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
 
             {{-- 2. Room Selection with Dynamic Availability --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-3">
+            <div class="bg-white rounded-2xl p-6 sm:p-7 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#233D32]/10 pb-4">
                     <div>
-                        <h3 class="font-bold text-stone-900 text-base">2. Room Selection</h3>
-                        <p class="text-xs text-stone-500">Live availability based on selected dates above.</p>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Step 2</span>
+                        <h3 class="font-serif font-bold text-[#233D32] text-lg">Room Inventory Selection</h3>
                     </div>
                     <div class="flex items-center gap-2">
-                        <label class="text-xs font-semibold text-stone-600">Category:</label>
+                        <label class="text-[11px] uppercase tracking-wider font-semibold text-[#777A72]">Category:</label>
                         <select wire:model.live="selectedCategoryId"
-                                class="px-2.5 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                class="px-3 py-1.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                             <option value="">All Categories</option>
                             @foreach($this->categories as $category)
                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -449,90 +448,90 @@ new class extends Component {
                 </div>
 
                 @error('selectedRoomId')
-                    <div class="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium">
+                    <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-medium">
                         ⚠️ {{ $message }}
                     </div>
                 @enderror
 
                 {{-- Rooms Grid --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto p-1">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-96 overflow-y-auto p-1 no-scrollbar">
                     @forelse($this->availableRooms as $room)
                         @php
                             $isSelected = $selectedRoomId === $room->id;
                             $canBook = $room->can_be_booked;
                         @endphp
                         <div wire:click="{{ $canBook ? 'selectRoom(' . $room->id . ')' : '' }}"
-                             class="relative p-3.5 rounded-2xl border-2 transition-all cursor-pointer {{ $isSelected ? 'border-emerald-600 bg-emerald-50/50 shadow-md ring-2 ring-emerald-500/30' : ($canBook ? 'border-stone-200 hover:border-emerald-400 bg-white hover:bg-stone-50/50' : 'border-stone-200 bg-stone-50/70 opacity-60 cursor-not-allowed') }}">
+                             class="relative p-4 rounded-2xl border transition-all cursor-pointer {{ $isSelected ? 'border-[#233D32] bg-[#FAF8F4] shadow-md ring-2 ring-[#233D32]/20' : ($canBook ? 'border-[#233D32]/15 hover:border-[#233D32]/40 bg-white hover:bg-[#FAF8F4]/50' : 'border-[#233D32]/10 bg-stone-50 opacity-60 cursor-not-allowed') }}">
                             <div class="flex items-start justify-between gap-2 mb-2">
                                 <div>
-                                    <span class="inline-block px-2 py-0.5 rounded text-[11px] font-extrabold font-mono {{ $isSelected ? 'bg-emerald-600 text-white' : 'bg-stone-800 text-white' }}">
+                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold font-mono tracking-wider {{ $isSelected ? 'bg-[#233D32] text-[#F7F5EF]' : 'bg-[#172A22] text-[#F7F5EF]' }}">
                                         Room {{ $room->room_number }}
                                     </span>
-                                    <p class="font-bold text-stone-900 text-sm mt-1 truncate">{{ $room->name }}</p>
-                                    <p class="text-[11px] text-stone-500">{{ $room->category?->name }}</p>
+                                    <p class="font-serif font-bold text-[#233D32] text-sm mt-1 truncate">{{ $room->name }}</p>
+                                    <p class="text-[10px] uppercase tracking-wider text-[#777A72]">{{ $room->category?->name }}</p>
                                 </div>
                                 <div class="text-right shrink-0">
-                                    <p class="text-xs font-black text-emerald-700">₱{{ number_format($room->base_price, 0) }}</p>
-                                    <p class="text-[10px] text-stone-400">/night</p>
+                                    <p class="font-serif font-bold text-sm text-[#233D32]">₱{{ number_format($room->base_price, 0) }}</p>
+                                    <p class="text-[10px] uppercase tracking-wider text-[#777A72]">/night</p>
                                 </div>
                             </div>
 
-                            <div class="flex items-center gap-2 text-[11px] text-stone-500 mt-2 pt-2 border-t border-stone-100">
+                            <div class="flex items-center gap-2 text-[11px] text-[#777A72] mt-2 pt-2 border-t border-[#233D32]/10">
                                 <span>👥 Up to {{ $room->capacity_adults }}</span>
                                 @if($room->allows_pets)
-                                    <span class="text-amber-700 font-medium">🐾 Pet friendly</span>
+                                    <span class="text-[#A68B61] font-semibold">🐾 Pet OK</span>
                                 @endif
                             </div>
 
                             @if(! $canBook)
-                                <div class="mt-2 text-[11px] font-bold text-rose-600 flex items-center gap-1">
+                                <div class="mt-2 text-[10px] font-semibold uppercase tracking-wider text-rose-600 flex items-center gap-1">
                                     <span>✕</span> {{ $room->availability_issue }}
                                 </div>
                             @elseif($isSelected)
-                                <div class="mt-2 text-[11px] font-bold text-emerald-700 flex items-center gap-1">
-                                    <span>✓</span> Selected for this booking
+                                <div class="mt-2 text-[10px] font-semibold uppercase tracking-wider text-emerald-800 flex items-center gap-1">
+                                    <span>✓</span> Selected Unit
                                 </div>
                             @endif
                         </div>
                     @empty
-                        <div class="col-span-full py-8 text-center text-stone-400 text-xs">
+                        <div class="col-span-full py-10 text-center text-[#777A72] text-xs font-light">
                             No rooms found matching the current criteria.
                         </div>
                     @endforelse
                 </div>
             </div>
 
-            {{-- 3. Guest Information & Headcount --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 space-y-4">
-                <div class="border-b border-stone-100 pb-3">
-                    <h3 class="font-bold text-stone-900 text-base">3. Guest Details & Party Size</h3>
-                    <p class="text-xs text-stone-500">Enter walk-in guest details and guest count.</p>
+            {{-- 3. Guest Details & Party Size --}}
+            <div class="bg-white rounded-2xl p-6 sm:p-7 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10 space-y-4">
+                <div class="border-b border-[#233D32]/10 pb-4">
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Step 3</span>
+                    <h3 class="font-serif font-bold text-[#233D32] text-lg">Guest Folio & Party Size</h3>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Guest Full Name *</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Guest Full Name *</label>
                         <input type="text" wire:model="guestName" required placeholder="e.g., Juan Dela Cruz"
-                               class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('guestName') border-red-400 @enderror">
-                        @error('guestName') <span class="text-[11px] text-red-600">{{ $message }}</span> @enderror
+                               class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] @error('guestName') border-rose-400 bg-rose-50 @enderror">
+                        @error('guestName') <span class="text-[11px] text-rose-600 font-medium">{{ $message }}</span> @enderror
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Phone Number</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Phone Number</label>
                         <input type="tel" wire:model="guestPhone" placeholder="0912-345-6789"
-                               class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Email (Optional)</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Email Address (Optional)</label>
                         <input type="email" wire:model="guestEmail" placeholder="juan@example.com"
-                               class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Link to Customer Account (Optional)</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Link to Member Account (Optional)</label>
                         <select wire:model="userId"
-                                class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                             <option value="">— Walk-in Guest (No Linked Account) —</option>
                             @foreach($this->customers as $cust)
                                 <option value="{{ $cust->id }}">{{ $cust->name }} ({{ $cust->email }})</option>
@@ -543,60 +542,60 @@ new class extends Component {
 
                 {{-- Guest Breakdown --}}
                 <div class="grid grid-cols-3 gap-3 pt-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Adults *</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Adults *</label>
                         <input type="number" wire:model.live="adults" min="1" max="20" required
-                               class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-bold text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Children</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Children</label>
                         <input type="number" wire:model.live="children" min="0" max="20"
-                               class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-bold text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Pets 🐾</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Pets 🐾</label>
                         <input type="number" wire:model.live="pets" min="0" max="10"
-                               class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-bold text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-stone-700 mb-1">Special Notes / Requests</label>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Special Requests or Folio Notes</label>
                     <textarea wire:model="specialRequests" rows="2" placeholder="e.g., Requested upper floor, late checkout, extra key"
-                              class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                              class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] resize-none font-light"></textarea>
                 </div>
             </div>
 
-            {{-- 4. Front-Desk Extras / Add-on Services --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 space-y-4">
-                <div class="border-b border-stone-100 pb-3">
-                    <h3 class="font-bold text-stone-900 text-base">4. Add-on Services & Amenities (Optional)</h3>
-                    <p class="text-xs text-stone-500">Select any extra services the guest wants upon booking.</p>
+            {{-- 4. Add-on Services --}}
+            <div class="bg-white rounded-2xl p-6 sm:p-7 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10 space-y-4">
+                <div class="border-b border-[#233D32]/10 pb-4">
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Step 4</span>
+                    <h3 class="font-serif font-bold text-[#233D32] text-lg">Resort Amenities & Extras</h3>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     @foreach($this->availableAddons as $addon)
                         @php
                             $qty = $addonQuantities[$addon->id] ?? 0;
                         @endphp
-                        <div class="p-3 rounded-xl border {{ $qty > 0 ? 'border-emerald-300 bg-emerald-50/40' : 'border-stone-200 bg-white' }} flex items-center justify-between">
+                        <div class="p-3.5 rounded-xl border {{ $qty > 0 ? 'border-[#233D32] bg-[#FAF8F4]' : 'border-[#233D32]/15 bg-white' }} flex items-center justify-between transition-colors">
                             <div>
-                                <p class="text-xs font-bold text-stone-900">{{ $addon->name }}</p>
-                                <p class="text-[11px] text-stone-500">
+                                <p class="text-xs font-serif font-bold text-[#233D32]">{{ $addon->name }}</p>
+                                <p class="text-[11px] text-[#777A72] mt-0.5">
                                     ₱{{ number_format($addon->price, 0) }}
-                                    <span class="text-stone-400">· {{ str_replace('_', ' ', $addon->pricing_type) }}</span>
+                                    <span class="text-[#A68B61]">· {{ str_replace('_', ' ', $addon->pricing_type) }}</span>
                                 </p>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <button type="button" wire:click="setAddonQty({{ $addon->id }}, {{ $qty - 1 }})"
-                                        class="w-7 h-7 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs flex items-center justify-center">
+                                        class="w-7 h-7 rounded-lg bg-[#FAF8F4] hover:bg-[#EFEBE1] border border-[#233D32]/15 text-[#233D32] font-bold text-xs flex items-center justify-center transition-colors">
                                     -
                                 </button>
-                                <span class="w-6 text-center text-xs font-bold">{{ $qty }}</span>
+                                <span class="w-6 text-center text-xs font-bold font-mono text-[#233D32]">{{ $qty }}</span>
                                 <button type="button" wire:click="setAddonQty({{ $addon->id }}, {{ $qty + 1 }})"
-                                        class="w-7 h-7 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs flex items-center justify-center">
+                                        class="w-7 h-7 rounded-lg bg-[#FAF8F4] hover:bg-[#EFEBE1] border border-[#233D32]/15 text-[#233D32] font-bold text-xs flex items-center justify-center transition-colors">
                                     +
                                 </button>
                             </div>
@@ -607,100 +606,102 @@ new class extends Component {
 
         </div>
 
-        {{-- Right Col: Price Breakdown & Payment Settlement --}}
+        {{-- Right Column: Summary & Payment Settlement --}}
         <div class="space-y-6">
 
             {{-- Selected Room Summary --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h3 class="font-bold text-stone-900 text-sm mb-3">Selected Room</h3>
+            <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10">
+                <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61] block mb-1">Assigned Unit</span>
+                <h3 class="font-serif font-bold text-[#233D32] text-lg mb-3">Selected Room</h3>
                 @if($this->selectedRoom)
-                    <div class="p-3 bg-stone-50 rounded-xl space-y-2">
+                    <div class="p-4 bg-[#FAF8F4] border border-[#233D32]/10 rounded-xl space-y-2">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="px-2 py-0.5 rounded text-[11px] font-extrabold bg-stone-900 text-white font-mono">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#233D32] text-[#F7F5EF] font-mono tracking-wider">
                                     Room {{ $this->selectedRoom->room_number }}
                                 </span>
-                                <p class="font-bold text-stone-900 text-sm mt-1">{{ $this->selectedRoom->name }}</p>
-                                <p class="text-xs text-stone-500">{{ $this->selectedRoom->category?->name }}</p>
+                                <p class="font-serif font-bold text-[#233D32] text-sm mt-1.5">{{ $this->selectedRoom->name }}</p>
+                                <p class="text-xs text-[#777A72]">{{ $this->selectedRoom->category?->name }}</p>
                             </div>
-                            <span class="text-xs font-black text-emerald-700">₱{{ number_format($this->selectedRoom->base_price, 2) }}/night</span>
+                            <span class="font-serif font-bold text-xs text-[#233D32]">₱{{ number_format($this->selectedRoom->base_price, 2) }}/night</span>
                         </div>
                     </div>
                 @else
-                    <div class="p-4 border-2 border-dashed border-stone-200 rounded-xl text-center text-stone-400 text-xs">
-                        👉 Please click a room from the list on the left.
+                    <div class="p-5 border-2 border-dashed border-[#233D32]/15 rounded-xl text-center text-[#777A72] text-xs font-light">
+                        Please select an available room from the list.
                     </div>
                 @endif
             </div>
 
             {{-- Pricing Breakdown --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 space-y-3">
-                <h3 class="font-bold text-stone-900 text-sm border-b border-stone-100 pb-2">Price Breakdown</h3>
-                <div class="space-y-2 text-xs">
-                    <div class="flex justify-between text-stone-600">
+            <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10 space-y-3">
+                <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61] block mb-1">Estimated Charges</span>
+                <h3 class="font-serif font-bold text-[#233D32] text-lg border-b border-[#233D32]/10 pb-2">Price Breakdown</h3>
+                <div class="space-y-2.5 text-xs">
+                    <div class="flex justify-between text-[#777A72]">
                         <span>Room Rate ({{ $this->nights }} night{{ $this->nights > 1 ? 's' : '' }})</span>
-                        <span class="font-semibold text-stone-900">₱{{ number_format($this->baseTotal, 2) }}</span>
+                        <span class="font-semibold text-[#292D29]">₱{{ number_format($this->baseTotal, 2) }}</span>
                     </div>
 
                     @if($this->petTotal > 0)
-                        <div class="flex justify-between text-stone-600">
+                        <div class="flex justify-between text-[#A68B61]">
                             <span>Pet Fee ({{ $this->pets }} pet × {{ $this->nights }} nights)</span>
-                            <span class="font-semibold text-stone-900">₱{{ number_format($this->petTotal, 2) }}</span>
+                            <span class="font-semibold">₱{{ number_format($this->petTotal, 2) }}</span>
                         </div>
                     @endif
 
                     @if($this->addonsTotal > 0)
-                        <div class="flex justify-between text-stone-600">
+                        <div class="flex justify-between text-[#777A72]">
                             <span>Add-ons & Extras</span>
-                            <span class="font-semibold text-stone-900">₱{{ number_format($this->addonsTotal, 2) }}</span>
+                            <span class="font-semibold text-[#292D29]">₱{{ number_format($this->addonsTotal, 2) }}</span>
                         </div>
                     @endif
 
-                    <div class="border-t border-stone-100 pt-2 flex justify-between text-sm font-extrabold text-stone-900">
+                    <div class="border-t border-[#233D32]/10 pt-3 flex justify-between items-baseline font-serif font-bold text-sm text-[#233D32]">
                         <span>Total Amount Due</span>
-                        <span class="text-emerald-700 text-base">₱{{ number_format($this->totalPrice, 2) }}</span>
+                        <span class="text-xl">₱{{ number_format($this->totalPrice, 2) }}</span>
                     </div>
                 </div>
             </div>
 
             {{-- Front-Desk Payment Settlement --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 space-y-4">
-                <div class="border-b border-stone-100 pb-2">
-                    <h3 class="font-bold text-stone-900 text-sm">💳 Front-Desk Payment</h3>
-                    <p class="text-[11px] text-stone-500">Record cash/card payment right now or collect later.</p>
+            <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10 space-y-4">
+                <div class="border-b border-[#233D32]/10 pb-2">
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61] block mb-1">Billing</span>
+                    <h3 class="font-serif font-bold text-[#233D32] text-lg">Payment Settlement</h3>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-stone-700 mb-1">Payment Status</label>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Payment Option</label>
                     <div class="grid grid-cols-3 gap-2">
                         <button type="button" wire:click="$set('paymentOption', 'pay_now')"
-                                class="py-2 px-1 text-center rounded-xl text-xs font-bold border transition-colors {{ $paymentOption === 'pay_now' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50' }}">
-                            Pay Full
+                                class="py-2.5 px-1 text-center rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all {{ $paymentOption === 'pay_now' ? 'bg-[#233D32] text-[#F7F5EF] border-[#233D32] shadow-2xs' : 'bg-white text-[#777A72] border-[#233D32]/15 hover:border-[#233D32]/30' }}">
+                            Full
                         </button>
                         <button type="button" wire:click="$set('paymentOption', 'partial')"
-                                class="py-2 px-1 text-center rounded-xl text-xs font-bold border transition-colors {{ $paymentOption === 'partial' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50' }}">
+                                class="py-2.5 px-1 text-center rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all {{ $paymentOption === 'partial' ? 'bg-[#A68B61] text-[#172A22] border-[#A68B61] shadow-2xs font-bold' : 'bg-white text-[#777A72] border-[#233D32]/15 hover:border-[#233D32]/30' }}">
                             Partial
                         </button>
                         <button type="button" wire:click="$set('paymentOption', 'pay_later')"
-                                class="py-2 px-1 text-center rounded-xl text-xs font-bold border transition-colors {{ $paymentOption === 'pay_later' ? 'bg-stone-800 text-white border-stone-800' : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50' }}">
+                                class="py-2.5 px-1 text-center rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all {{ $paymentOption === 'pay_later' ? 'bg-stone-800 text-white border-stone-800 shadow-2xs' : 'bg-white text-[#777A72] border-[#233D32]/15 hover:border-[#233D32]/30' }}">
                             Unpaid
                         </button>
                     </div>
                 </div>
 
                 @if($paymentOption === 'partial')
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Deposit Amount (₱) *</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Deposit Amount (₱) *</label>
                         <input type="number" step="0.01" wire:model="partialAmount" placeholder="Amount collected now"
-                               class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-bold text-[#233D32] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                     </div>
                 @endif
 
                 @if($paymentOption !== 'pay_later')
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Payment Method</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Payment Method</label>
                         <select wire:model="paymentMethod"
-                                class="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                             <option value="cash">Cash Settlement</option>
                             <option value="card">Credit / Debit Card</option>
                             <option value="gcash">GCash</option>
@@ -710,20 +711,20 @@ new class extends Component {
                 @endif
 
                 {{-- Immediate Check-In Toggle --}}
-                <div class="p-3.5 bg-stone-50 rounded-xl border border-stone-200 space-y-1">
-                    <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-stone-900">
-                        <input type="checkbox" wire:model="checkInNow" class="rounded border-stone-300 text-emerald-600 focus:ring-emerald-500">
+                <div class="p-3.5 bg-[#FAF8F4] rounded-xl border border-[#233D32]/10 space-y-1">
+                    <label class="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-[#233D32]">
+                        <input type="checkbox" wire:model="checkInNow" class="rounded border-[#233D32]/20 text-[#233D32] focus:ring-[#233D32]">
                         <span>Check In Guest Immediately</span>
                     </label>
-                    <p class="text-[11px] text-stone-500 pl-6">
-                        If checked, booking is marked <strong>Checked In</strong> and Room is marked <strong>Occupied</strong> right away.
+                    <p class="text-[11px] text-[#777A72] pl-6 font-light">
+                        If enabled, booking is marked <strong>Checked In</strong> and Room is marked <strong>Occupied</strong> right away.
                     </p>
                 </div>
 
                 {{-- Submit Button --}}
                 <button type="submit"
-                        class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-emerald-200 flex items-center justify-center gap-2">
-                    <span>✅</span> Confirm & Create Booking
+                        class="w-full py-3.5 bg-[#233D32] hover:bg-[#172A22] text-[#F7F5EF] font-semibold rounded-xl text-xs uppercase tracking-widest transition-all shadow-[0_4px_15px_rgba(35,61,50,0.18)] hover:-translate-y-0.5">
+                    Confirm & Register Walk-In
                 </button>
             </div>
 

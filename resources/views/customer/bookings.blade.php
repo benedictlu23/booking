@@ -1,8 +1,8 @@
 <x-layouts.app>
-    <x-slot:title>My Bookings</x-slot:title>
+    <x-slot:title>My Bookings | Agro-Inland Resort</x-slot:title>
 
-    <div class="pt-24 pb-16 min-h-screen bg-stone-50">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6">
+    <div class="pt-28 pb-20 min-h-screen bg-[#F7F5EF]">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6">
             <livewire:customer.bookings-list :initialStatus="request('status')" />
         </div>
     </div>

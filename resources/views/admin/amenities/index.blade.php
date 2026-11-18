@@ -1,51 +1,63 @@
 <x-layouts.admin>
     <x-slot:heading>Resort Amenities</x-slot:heading>
-    <x-slot:subheading>Manage resort and room amenities</x-slot:subheading>
+    <x-slot:subheading>Manage resort and room amenities catalogue</x-slot:subheading>
 
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div class="flex items-center gap-2">
-            <a href="{{ route('admin.settings.index') }}" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-stone-600 bg-white border border-stone-200 hover:bg-stone-50">← General Settings</a>
-            <a href="{{ route('admin.categories.index') }}" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-stone-600 bg-white border border-stone-200 hover:bg-stone-50">Room Categories</a>
+            <a href="{{ route('admin.settings.index') }}" class="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl text-stone-600 bg-white border border-stone-200 hover:bg-[#F7F5EF] hover:text-[#233D32] transition-colors">
+                ← General Settings
+            </a>
+            <a href="{{ route('admin.categories.index') }}" class="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl text-stone-600 bg-white border border-stone-200 hover:bg-[#F7F5EF] hover:text-[#233D32] transition-colors">
+                Room Categories
+            </a>
         </div>
         <a href="{{ route('admin.amenities.create') }}"
-           class="px-5 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition-colors">
+           class="inline-flex items-center justify-center px-5 py-2.5 bg-[#233D32] hover:bg-[#172A22] text-[#F7F5EF] text-xs font-medium uppercase tracking-wider rounded-xl transition-colors shadow-xs">
             + Add Amenity
         </a>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-xs border border-stone-200/80 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-stone-50 border-b border-stone-200">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-[#FAF8F4] border-b border-stone-200/80 text-[11px] font-semibold uppercase tracking-wider text-stone-500">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Icon</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Amenity Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Linked Rooms</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-stone-500 uppercase tracking-wide">Actions</th>
+                        <th class="px-6 py-3.5">Icon</th>
+                        <th class="px-6 py-3.5">Amenity Name</th>
+                        <th class="px-6 py-3.5">Linked Rooms</th>
+                        <th class="px-6 py-3.5 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-stone-50">
+                <tbody class="divide-y divide-stone-100">
                     @forelse($amenities as $amenity)
-                        <tr class="hover:bg-stone-50/50 transition-colors">
-                            <td class="px-4 py-4 text-xl">{{ $amenity->icon ?: '✨' }}</td>
-                            <td class="px-4 py-4 font-semibold text-stone-900">{{ $amenity->name }}</td>
-                            <td class="px-4 py-4 text-xs font-semibold text-stone-700">{{ $amenity->rooms_count }} rooms</td>
-                            <td class="px-4 py-4 text-right">
-                                <div class="flex items-center justify-end gap-1.5">
+                        <tr class="hover:bg-[#FAF8F4]/50 transition-colors">
+                            <td class="px-6 py-4 text-xl">{{ $amenity->icon ?: '✨' }}</td>
+                            <td class="px-6 py-4 font-serif font-bold text-[#172A22] text-base">{{ $amenity->name }}</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#EFEBE1] text-[#233D32]">
+                                    {{ $amenity->rooms_count }} {{ Str::plural('suite', $amenity->rooms_count) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route('admin.amenities.edit', $amenity) }}"
-                                       class="px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-semibold rounded-lg transition-colors">Edit</a>
+                                       class="px-3 py-1.5 bg-[#EFEBE1] hover:bg-[#233D32] text-[#233D32] hover:text-[#F7F5EF] text-xs font-medium rounded-lg transition-colors">
+                                        Edit
+                                    </a>
                                     <form method="POST" action="{{ route('admin.amenities.destroy', $amenity) }}"
                                           onsubmit="return confirm('Delete amenity {{ $amenity->name }}?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="px-2.5 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded-lg transition-colors">Delete</button>
+                                        <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium rounded-lg transition-colors">
+                                            Delete
+                                        </button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-12 text-center text-stone-400 text-sm">
-                                No amenities found.
+                            <td colspan="4" class="px-6 py-12 text-center text-stone-400 font-serif text-sm">
+                                No resort amenities catalogued yet.
                             </td>
                         </tr>
                     @endforelse
@@ -53,7 +65,7 @@
             </table>
         </div>
         @if($amenities->hasPages())
-            <div class="px-4 py-3 border-t border-stone-100">{{ $amenities->links() }}</div>
+            <div class="px-6 py-4 border-t border-stone-200/80 bg-[#FAF8F4]">{{ $amenities->links() }}</div>
         @endif
     </div>
 </x-layouts.admin>

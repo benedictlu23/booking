@@ -372,17 +372,17 @@ new class extends Component {
 }; ?>
 
 <div>
-    <form wire:submit="submitBooking" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- Left: Form --}}
-        <div class="lg:col-span-2 space-y-5">
+    <form wire:submit="submitBooking" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {{-- Left: Reservation Configuration (8 cols) --}}
+        <div class="lg:col-span-8 space-y-7">
 
             @if($errors->any())
-                <div class="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm">
-                    <p class="font-bold flex items-center gap-1.5 mb-1.5">
-                        <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                        Please resolve the following before continuing:
+                <div class="p-5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs">
+                    <p class="font-bold flex items-center gap-2 mb-2 text-sm">
+                        <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        Please address the following requirements:
                     </p>
-                    <ul class="list-disc list-inside text-xs space-y-1">
+                    <ul class="list-disc list-inside space-y-1 font-medium pl-1">
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
@@ -390,42 +390,48 @@ new class extends Component {
                 </div>
             @endif
 
-            {{-- Stay Dates --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="font-bold text-stone-900 text-base">Your Stay</h2>
+            {{-- 1. Schedule & Stay Duration --}}
+            <div class="bg-white rounded-3xl p-7 shadow-[0_4px_24px_-4px_rgba(35,61,50,0.06)] border border-[#233D32]/10 space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#233D32]/10 pb-4">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Step 1</span>
+                        <h2 class="font-serif font-bold text-xl text-[#233D32]">Stay Schedule</h2>
+                    </div>
                     <div wire:loading.remove wire:target="checkIn, checkOut, bookingType">
                         @if($isAvailable)
-                            <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-lg flex items-center gap-1">
-                                ✓ Available for selected dates
+                            <span class="px-3 py-1 bg-[#EFEBE1] text-[#233D32] text-xs font-semibold rounded-full border border-[#233D32]/10 flex items-center gap-1.5 shadow-xs">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#233D32]"></span>
+                                <span>✓ Available for selected dates</span>
                             </span>
                         @else
-                            <span class="px-2.5 py-1 bg-rose-100 text-rose-800 text-xs font-semibold rounded-lg flex items-center gap-1">
-                                ⚠️ Not Available
+                            <span class="px-3 py-1 bg-rose-100 text-rose-800 text-xs font-semibold rounded-full border border-rose-200 flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+                                <span>⚠️ Not Available</span>
                             </span>
                         @endif
                     </div>
-                    <div wire:loading wire:target="checkIn, checkOut, bookingType" class="text-xs text-stone-400">
-                        ⏳ Checking availability...
+                    <div wire:loading wire:target="checkIn, checkOut, bookingType" class="text-xs text-[#777A72] animate-pulse">
+                        Checking calendar...
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Check-In</label>
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Check-In</label>
                         <input type="date"
                                wire:model.live="checkIn"
                                min="{{ today()->format('Y-m-d') }}"
-                               class="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('checkIn') border-red-400 @enderror">
+                               class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] @error('checkIn') border-red-400 @enderror">
                         @error('checkIn')
-                            <span class="text-xs text-red-600 mt-1 block font-medium">⚠️ {{ $message }}</span>
+                            <span class="text-xs text-rose-600 mt-1 block font-medium">{{ $message }}</span>
                         @enderror
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 flex items-center justify-between">
+
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72] flex items-center justify-between">
                             <span>Check-Out</span>
                             @if($bookingType === 'day_pass')
-                                <span class="text-[10px] text-amber-700 font-semibold normal-case bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Locked (Day Pass)</span>
+                                <span class="text-[10px] text-[#8C734D] font-semibold normal-case bg-[#EFEBE1] px-2 py-0.5 rounded-full border border-[#A68B61]/30">Locked (Day Pass)</span>
                             @endif
                         </label>
                         <input type="date"
@@ -433,122 +439,136 @@ new class extends Component {
                                @disabled($bookingType === 'day_pass')
                                @readonly($bookingType === 'day_pass')
                                min="{{ $bookingType === 'day_pass' ? $checkIn : today()->addDay()->format('Y-m-d') }}"
-                               class="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 @error('checkOut') border-red-400 @enderror {{ $bookingType === 'day_pass' ? 'bg-stone-100 text-stone-500 cursor-not-allowed select-none' : '' }}">
+                               class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] @error('checkOut') border-red-400 @enderror {{ $bookingType === 'day_pass' ? 'bg-[#EFEBE1] text-[#777A72] cursor-not-allowed select-none opacity-80' : '' }}">
                         @if($bookingType === 'day_pass')
-                            <p class="text-[11px] text-stone-400 mt-1">Same-day departure for Day Pass bookings.</p>
+                            <p class="text-[11px] text-[#8C734D] mt-1 font-light">Same-day departure for Day Pass reservations.</p>
                         @endif
                         @error('checkOut')
-                            <span class="text-xs text-red-600 mt-1 block font-medium">⚠️ {{ $message }}</span>
+                            <span class="text-xs text-rose-600 mt-1 block font-medium">{{ $message }}</span>
                         @enderror
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Booking Type</label>
+
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Accommodation Type</label>
                         @if($room->booking_type === 'overnight')
-                            <div class="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm bg-stone-50 text-stone-600">
-                                Overnight Stay <span class="text-xs text-stone-400">(only option for this room)</span>
+                            <div class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium bg-[#EFEBE1] text-[#233D32]">
+                                Overnight Stay <span class="text-xs text-[#777A72] font-normal">(Dedicated)</span>
                             </div>
                         @elseif($room->booking_type === 'day_pass')
-                            <div class="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm bg-stone-50 text-stone-600">
-                                Day Pass <span class="text-xs text-stone-400">(only option for this room)</span>
+                            <div class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium bg-[#EFEBE1] text-[#233D32]">
+                                Day Pass <span class="text-xs text-[#777A72] font-normal">(Dedicated)</span>
                             </div>
                         @else
                             <select wire:model.live="bookingType"
-                                    class="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
                                 <option value="overnight">Overnight Stay</option>
-                                <option value="day_pass">Day Pass</option>
+                                <option value="day_pass">Day Pass Only</option>
                             </select>
                         @endif
                         @error('bookingType')
-                            <span class="text-xs text-red-600 mt-1 block font-medium">⚠️ {{ $message }}</span>
+                            <span class="text-xs text-rose-600 mt-1 block font-medium">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
 
                 @if(!$isAvailable)
-                    <div class="mt-3 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <p class="font-bold flex items-center gap-1.5">
                                 <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                 This room is not available for the selected dates.
                             </p>
                             @if($nextAvailableDate)
-                                <p class="text-stone-600 mt-1">Next available opening: <span class="font-bold text-stone-900">{{ \Illuminate\Support\Carbon::parse($nextAvailableDate)->format('D, M d, Y') }}</span></p>
+                                <p class="text-[#595D58] mt-1">Next available check-in opening: <strong class="text-[#233D32]">{{ \Illuminate\Support\Carbon::parse($nextAvailableDate)->format('D, M d, Y') }}</strong></p>
                             @endif
                         </div>
                         @if($nextAvailableDate)
                             <button type="button"
                                     wire:click="selectDate('{{ $nextAvailableDate }}')"
-                                    class="shrink-0 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition-colors shadow-sm flex items-center gap-1">
-                                <span>Switch to {{ \Illuminate\Support\Carbon::parse($nextAvailableDate)->format('M d') }}</span> →
+                                    class="shrink-0 px-4 py-2 bg-[#233D32] hover:bg-[#172A22] text-[#F7F5EF] font-semibold rounded-xl text-xs uppercase tracking-wider transition-all shadow-xs flex items-center gap-1.5">
+                                <span>Switch to {{ \Illuminate\Support\Carbon::parse($nextAvailableDate)->format('M d') }}</span>
+                                <span>→</span>
                             </button>
                         @endif
                     </div>
                 @endif
             </div>
 
-            {{-- Guests --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h2 class="font-bold text-stone-900 mb-4 text-base">Guests</h2>
-                <div class="grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Adults</label>
+            {{-- 2. Guest Roster & Pet Arrangements --}}
+            <div class="bg-white rounded-3xl p-7 shadow-[0_4px_24px_-4px_rgba(35,61,50,0.06)] border border-[#233D32]/10 space-y-5">
+                <div class="border-b border-[#233D32]/10 pb-4">
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Step 2</span>
+                    <h2 class="font-serif font-bold text-xl text-[#233D32]">Guests & Pets</h2>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Adults</label>
                         <input type="number"
                                wire:model.live="adults"
                                min="1" max="{{ $room->capacity_adults }}"
-                               class="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <p class="text-xs text-stone-400 mt-1">Max {{ $room->capacity_adults }}</p>
+                               class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
+                        <p class="text-[11px] text-[#777A72] mt-1 font-light">Max {{ $room->capacity_adults }} adults</p>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Children</label>
+
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Children</label>
                         <input type="number"
                                wire:model.live="children"
                                min="0" max="{{ $room->capacity_children }}"
-                               class="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
+                        <p class="text-[11px] text-[#777A72] mt-1 font-light">Max {{ $room->capacity_children }} children</p>
                     </div>
+
                     @if($room->allows_pets)
-                        <div>
-                            <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Pets 🐾</label>
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Pets 🐾</label>
                             <input type="number"
                                    wire:model.live="pets"
                                    min="0" max="5"
-                                   class="w-full px-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                            <p class="text-xs text-amber-600 mt-1">+₱{{ number_format($room->pet_fee, 0) }}/night each</p>
+                                   class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
+                            <p class="text-[11px] text-[#A68B61] mt-1 font-medium">+₱{{ number_format($room->pet_fee, 0) }}/night per pet</p>
                         </div>
                     @endif
                 </div>
             </div>
 
-            {{-- Optional Add-ons --}}
+            {{-- 3. Optional Add-ons --}}
             @if($this->availableAddons->isNotEmpty())
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                    <h2 class="font-bold text-stone-900 mb-1 text-base">Enhance Your Stay</h2>
-                    <p class="text-sm text-stone-500 mb-4">Add optional extras to your booking</p>
-                    <div class="space-y-3">
+                <div class="bg-white rounded-3xl p-7 shadow-[0_4px_24px_-4px_rgba(35,61,50,0.06)] border border-[#233D32]/10 space-y-5">
+                    <div class="border-b border-[#233D32]/10 pb-4">
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Step 3</span>
+                        <h2 class="font-serif font-bold text-xl text-[#233D32]">Curated Add-On Services</h2>
+                        <p class="text-xs text-[#777A72] font-light mt-0.5">Select optional amenities and dining experiences for your stay</p>
+                    </div>
+
+                    <div class="space-y-3.5">
                         @foreach($this->availableAddons as $addon)
                             @php
                                 $qty = $addonQuantities[$addon->id] ?? 0;
                             @endphp
-                            <div class="flex items-center gap-4 p-3 border rounded-xl transition-colors {{ $qty > 0 ? 'border-emerald-300 bg-emerald-50/20' : 'border-stone-100 hover:border-emerald-200' }}">
-                                <span class="text-2xl">{{ $addon->icon ?? '✨' }}</span>
-                                <div class="flex-1">
-                                    <p class="font-semibold text-stone-900 text-sm">{{ $addon->name }}</p>
+                            <div class="flex items-center gap-4 p-4 rounded-2xl border transition-all {{ $qty > 0 ? 'border-[#A68B61] bg-[#FAF8F4]' : 'border-[#233D32]/10 hover:border-[#233D32]/30 bg-white' }}">
+                                <span class="text-3xl shrink-0">{{ $addon->icon ?? '🌿' }}</span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-serif font-bold text-[#233D32] text-sm leading-snug">{{ $addon->name }}</p>
                                     @if($addon->description)
-                                        <p class="text-xs text-stone-500">{{ $addon->description }}</p>
+                                        <p class="text-xs text-[#777A72] font-light mt-0.5 leading-relaxed">{{ $addon->description }}</p>
                                     @endif
-                                    <p class="text-xs text-emerald-600 font-semibold mt-0.5">
-                                        ₱{{ number_format($addon->price, 2) }} / {{ str_replace('_', ' ', $addon->pricing_type) }}
+                                    <p class="text-xs font-semibold text-[#A68B61] mt-1">
+                                        ₱{{ number_format($addon->price, 2) }}
+                                        <span class="text-[#777A72] font-normal">/ {{ str_replace('_', ' ', $addon->pricing_type) }}</span>
                                     </p>
                                 </div>
                                 <div class="shrink-0 flex items-center gap-2">
                                     <button type="button"
                                             wire:click="setAddonQty({{ $addon->id }}, {{ max(0, $qty - 1) }})"
-                                            class="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-sm flex items-center justify-center transition-colors">
+                                            class="w-8 h-8 rounded-lg bg-[#EFEBE1] hover:bg-[#E5E0D4] text-[#233D32] font-bold text-sm flex items-center justify-center transition-colors">
                                         -
                                     </button>
-                                    <span class="w-6 text-center font-bold text-sm text-stone-900">{{ $qty }}</span>
+                                    <span class="w-7 text-center font-bold text-sm text-[#233D32]">{{ $qty }}</span>
                                     <button type="button"
                                             wire:click="setAddonQty({{ $addon->id }}, {{ $qty + 1 }})"
-                                            class="w-8 h-8 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-sm flex items-center justify-center transition-colors">
+                                            class="w-8 h-8 rounded-lg bg-[#233D32] hover:bg-[#172A22] text-[#F7F5EF] font-bold text-sm flex items-center justify-center transition-colors shadow-xs">
                                         +
                                     </button>
                                 </div>
@@ -558,115 +578,141 @@ new class extends Component {
                 </div>
             @endif
 
-            {{-- Payment Method Option --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h2 class="font-bold text-stone-900 mb-4 text-base">Payment Method</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <label class="p-3 border rounded-xl flex items-center gap-3 cursor-pointer transition-colors {{ $paymentMethod === 'cash' ? 'border-emerald-500 bg-emerald-50/50' : 'border-stone-200' }}">
-                        <input type="radio" wire:model.live="paymentMethod" value="cash" class="text-emerald-600 focus:ring-emerald-500">
+            {{-- 4. Payment Preference --}}
+            <div class="bg-white rounded-3xl p-7 shadow-[0_4px_24px_-4px_rgba(35,61,50,0.06)] border border-[#233D32]/10 space-y-5">
+                <div class="border-b border-[#233D32]/10 pb-4">
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Step 4</span>
+                    <h2 class="font-serif font-bold text-xl text-[#233D32]">Payment Method</h2>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    <label class="p-4 border rounded-2xl flex items-start gap-3.5 cursor-pointer transition-all {{ $paymentMethod === 'cash' ? 'border-[#233D32] bg-[#FAF8F4] shadow-xs' : 'border-[#233D32]/15 hover:border-[#233D32]/40' }}">
+                        <input type="radio" wire:model.live="paymentMethod" value="cash" class="mt-0.5 text-[#233D32] focus:ring-[#233D32]">
                         <div>
-                            <p class="font-semibold text-xs text-stone-900">Cash on Arrival</p>
-                            <p class="text-[11px] text-stone-500">Pay at Front Desk</p>
+                            <p class="font-semibold text-xs uppercase tracking-wider text-[#233D32]">Cash on Arrival</p>
+                            <p class="text-[11px] text-[#777A72] font-light mt-0.5">Settle directly at front desk</p>
                         </div>
                     </label>
-                    <label class="p-3 border rounded-xl flex items-center gap-3 cursor-pointer transition-colors {{ $paymentMethod === 'gcash' ? 'border-emerald-500 bg-emerald-50/50' : 'border-stone-200' }}">
-                        <input type="radio" wire:model.live="paymentMethod" value="gcash" class="text-emerald-600 focus:ring-emerald-500">
+
+                    <label class="p-4 border rounded-2xl flex items-start gap-3.5 cursor-pointer transition-all {{ $paymentMethod === 'gcash' ? 'border-[#233D32] bg-[#FAF8F4] shadow-xs' : 'border-[#233D32]/15 hover:border-[#233D32]/40' }}">
+                        <input type="radio" wire:model.live="paymentMethod" value="gcash" class="mt-0.5 text-[#233D32] focus:ring-[#233D32]">
                         <div>
-                            <p class="font-semibold text-xs text-stone-900">GCash</p>
-                            <p class="text-[11px] text-stone-500">Online transfer</p>
+                            <p class="font-semibold text-xs uppercase tracking-wider text-[#233D32]">GCash</p>
+                            <p class="text-[11px] text-[#777A72] font-light mt-0.5">Online mobile wallet</p>
                         </div>
                     </label>
-                    <label class="p-3 border rounded-xl flex items-center gap-3 cursor-pointer transition-colors {{ $paymentMethod === 'bank_transfer' ? 'border-emerald-500 bg-emerald-50/50' : 'border-stone-200' }}">
-                        <input type="radio" wire:model.live="paymentMethod" value="bank_transfer" class="text-emerald-600 focus:ring-emerald-500">
+
+                    <label class="p-4 border rounded-2xl flex items-start gap-3.5 cursor-pointer transition-all {{ $paymentMethod === 'bank_transfer' ? 'border-[#233D32] bg-[#FAF8F4] shadow-xs' : 'border-[#233D32]/15 hover:border-[#233D32]/40' }}">
+                        <input type="radio" wire:model.live="paymentMethod" value="bank_transfer" class="mt-0.5 text-[#233D32] focus:ring-[#233D32]">
                         <div>
-                            <p class="font-semibold text-xs text-stone-900">Bank Transfer</p>
-                            <p class="text-[11px] text-stone-500">BDO Account</p>
+                            <p class="font-semibold text-xs uppercase tracking-wider text-[#233D32]">Bank Transfer</p>
+                            <p class="text-[11px] text-[#777A72] font-light mt-0.5">Direct deposit to BDO</p>
                         </div>
                     </label>
                 </div>
             </div>
 
-            {{-- Discount Code --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h2 class="font-bold text-stone-900 mb-4 text-base">Discount Code</h2>
-                <div class="flex gap-3">
-                    <input type="text"
-                           wire:model="discountCode"
-                           wire:keydown.enter.prevent="applyDiscount"
-                           placeholder="Enter promo code (e.g. PROMO500)..."
-                           class="flex-1 px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase">
-                    <button type="button"
-                            wire:click="applyDiscount"
-                            class="px-5 py-2.5 bg-stone-800 hover:bg-stone-900 text-white text-sm font-semibold rounded-xl transition-colors">
-                        Apply
-                    </button>
-                </div>
-                @if($discountMessage)
-                    <p class="mt-2 text-xs font-semibold {{ $discountValid ? 'text-emerald-600' : 'text-rose-600' }}">
-                        {{ $discountMessage }}
-                    </p>
-                @endif
-            </div>
+            {{-- 5. Promotion & Special Requests --}}
+            <div class="bg-white rounded-3xl p-7 shadow-[0_4px_24px_-4px_rgba(35,61,50,0.06)] border border-[#233D32]/10 space-y-6">
+                <div>
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Step 5</span>
+                    <h2 class="font-serif font-bold text-xl text-[#233D32] mb-3">Promo Code & Requests</h2>
 
-            {{-- Special Requests --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-                <h2 class="font-bold text-stone-900 mb-4 text-base">Special Requests</h2>
-                <textarea wire:model="specialRequests"
-                          rows="3"
-                          placeholder="Any special requests or notes? (optional)"
-                          class="w-full px-4 py-3 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea>
+                    {{-- Promo Input --}}
+                    <div class="flex gap-3">
+                        <input type="text"
+                               wire:model="discountCode"
+                               wire:keydown.enter.prevent="applyDiscount"
+                               placeholder="Enter promo coupon..."
+                               class="flex-1 px-4 py-2.5 border border-[#233D32]/15 rounded-xl text-sm uppercase tracking-wider font-mono font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
+                        <button type="button"
+                                wire:click="applyDiscount"
+                                class="px-5 py-2.5 bg-[#EFEBE1] hover:bg-[#233D32] text-[#233D32] hover:text-[#F7F5EF] text-xs font-semibold uppercase tracking-wider rounded-xl transition-all border border-[#233D32]/15 shadow-xs">
+                            Apply
+                        </button>
+                    </div>
+                    @if($discountMessage)
+                        <p class="mt-2 text-xs font-semibold {{ $discountValid ? 'text-[#233D32]' : 'text-rose-700' }}">
+                            {{ $discountMessage }}
+                        </p>
+                    @endif
+                </div>
+
+                <div class="border-t border-[#233D32]/10 pt-5">
+                    <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72] mb-2">Special Requests or Notes</label>
+                    <textarea wire:model="specialRequests"
+                              rows="3"
+                              placeholder="Any dietary requirements, arrival notes, or quiet preferences? (optional)"
+                              class="w-full px-4 py-3 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] resize-none font-light leading-relaxed"></textarea>
+                </div>
             </div>
         </div>
 
-        {{-- Right: Summary --}}
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-2xl shadow-xl shadow-stone-200/50 border border-stone-100 p-6 sticky top-24">
-                <h2 class="font-bold text-stone-900 mb-4 text-base">Booking Summary</h2>
-
-                <div class="mb-4 p-3 bg-stone-50 rounded-xl">
-                    <p class="font-semibold text-stone-900 text-sm">{{ $room->name }}</p>
-                    <p class="text-xs text-stone-500">Room {{ $room->room_number }} · {{ $room->category?->name }}</p>
+        {{-- Right: Resort Folio Summary (4 cols) --}}
+        <div class="lg:col-span-4">
+            <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgba(35,61,50,0.1)] border border-[#233D32]/10 p-7 sticky top-28 space-y-6">
+                <div>
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61] block mb-1">Reservation Folio</span>
+                    <h2 class="font-serif font-bold text-2xl text-[#233D32]">Booking Summary</h2>
                 </div>
 
-                <div class="space-y-2 text-sm mb-4">
-                    <div class="flex justify-between text-stone-600">
-                        <span>₱{{ number_format($room->base_price, 0) }} × {{ $this->nights }} night{{ $this->nights !== 1 ? 's' : '' }}</span>
-                        <span>₱{{ number_format($this->baseTotal, 2) }}</span>
+                {{-- Accommodation Overview Card --}}
+                <div class="p-4 bg-[#FAF8F4] rounded-2xl border border-[#233D32]/10 flex items-center gap-3.5">
+                    @if($room->photos->isNotEmpty())
+                        <img src="{{ $room->photos->first()->path }}" alt="{{ $room->name }}" class="w-14 h-14 rounded-xl object-cover shrink-0">
+                    @else
+                        <div class="w-14 h-14 rounded-xl bg-white border border-[#233D32]/10 p-1 flex items-center justify-center shrink-0">
+                            <img src="{{ asset('storage/assets/AIR-LOGO.png') }}" alt="" class="w-10 h-10 object-contain">
+                        </div>
+                    @endif
+                    <div class="min-w-0">
+                        <p class="font-serif font-bold text-sm text-[#233D32] truncate">{{ $room->name }}</p>
+                        <p class="text-xs text-[#777A72] font-mono">Unit {{ $room->room_number }} · {{ $room->category?->name }}</p>
+                    </div>
+                </div>
+
+                {{-- Calculations Breakdown --}}
+                <div class="space-y-3 text-xs text-[#595D58] border-t border-[#233D32]/10 pt-4">
+                    <div class="flex justify-between items-center">
+                        <span>Rate: ₱{{ number_format($room->base_price, 0) }} × {{ $this->nights }} night{{ $this->nights !== 1 ? 's' : '' }}</span>
+                        <span class="font-semibold text-[#292D29]">₱{{ number_format($this->baseTotal, 2) }}</span>
                     </div>
 
                     @if($this->petTotal > 0)
-                        <div class="flex justify-between text-amber-700">
-                            <span>Pet fee × {{ $this->nights }} night{{ $this->nights !== 1 ? 's' : '' }} ({{ $pets }} pet{{ $pets > 1 ? 's' : '' }})</span>
-                            <span>₱{{ number_format($this->petTotal, 2) }}</span>
+                        <div class="flex justify-between items-center text-[#A68B61]">
+                            <span>Pet Fee ({{ $pets }} pet{{ $pets > 1 ? 's' : '' }} × {{ $this->nights }} night{{ $this->nights !== 1 ? 's' : '' }})</span>
+                            <span class="font-semibold">₱{{ number_format($this->petTotal, 2) }}</span>
                         </div>
                     @endif
 
                     @if($this->addonsTotal > 0)
-                        <div class="flex justify-between text-stone-600">
-                            <span>Add-ons</span>
-                            <span>₱{{ number_format($this->addonsTotal, 2) }}</span>
+                        <div class="flex justify-between items-center">
+                            <span>Selected Add-On Services</span>
+                            <span class="font-semibold text-[#292D29]">₱{{ number_format($this->addonsTotal, 2) }}</span>
                         </div>
                     @endif
 
                     @if($discountAmount > 0)
-                        <div class="flex justify-between text-emerald-600 font-medium">
-                            <span>Discount</span>
+                        <div class="flex justify-between items-center text-[#233D32] font-semibold bg-[#EFEBE1] px-2.5 py-1.5 rounded-lg border border-[#233D32]/10">
+                            <span>Applied Promotion</span>
                             <span>-₱{{ number_format($discountAmount, 2) }}</span>
                         </div>
                     @endif
 
-                    <div class="border-t border-stone-100 pt-3 flex justify-between font-black text-lg">
-                        <span class="text-stone-900">Total</span>
-                        <span class="text-emerald-600">₱{{ number_format($this->totalPrice, 2) }}</span>
+                    <div class="border-t border-[#233D32]/10 pt-4 flex justify-between items-baseline">
+                        <span class="font-serif font-bold text-base text-[#233D32]">Estimated Total</span>
+                        <span class="font-serif font-bold text-3xl text-[#233D32]">₱{{ number_format($this->totalPrice, 2) }}</span>
                     </div>
                 </div>
 
                 <button type="submit"
                         @if(!$isAvailable) disabled @endif
-                        class="w-full py-3.5 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-200 text-sm {{ $isAvailable ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 hover:-translate-y-0.5' : 'bg-stone-300 cursor-not-allowed opacity-60' }}">
-                    <span>Confirm Booking →</span>
+                        class="w-full py-4 text-[#F7F5EF] font-semibold rounded-xl text-xs uppercase tracking-widest transition-all shadow-[0_4px_15px_rgba(35,61,50,0.2)] {{ $isAvailable ? 'bg-[#233D32] hover:bg-[#172A22] hover:-translate-y-0.5' : 'bg-stone-300 cursor-not-allowed opacity-60' }}">
+                    <span>Confirm Reservation →</span>
                 </button>
-                <p class="text-xs text-stone-400 text-center mt-2">Payment due at check-in or via proof upload.</p>
+                <p class="text-[11px] text-[#777A72] text-center font-light leading-relaxed">
+                    No upfront charge required for Cash reservations. Proof upload available after confirmation.
+                </p>
             </div>
         </div>
     </form>
