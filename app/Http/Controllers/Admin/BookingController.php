@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -157,9 +158,10 @@ class BookingController extends Controller
         }
 
         try {
-            broadcast(new NewBookingReceived($booking))->toOthers();
-        } catch (\Throwable) {
-            // Reverb broadcast failure is non-fatal
+            $booking->load(['room.category']);
+            broadcast(new NewBookingReceived($booking));
+        } catch (\Throwable $e) {
+            Log::warning('NewBookingReceived broadcast error: '.$e->getMessage());
         }
 
         return redirect()->route('admin.bookings.show', $booking)
@@ -331,7 +333,7 @@ class BookingController extends Controller
         $booking->room->update(['status' => 'available']);
 
         try {
-            broadcast(new BookingCancelled($booking))->toOthers();
+            broadcast(new BookingCancelled($booking));
         } catch (\Throwable) {
             // Reverb broadcast failure is non-fatal
         }

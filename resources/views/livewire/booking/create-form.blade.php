@@ -363,8 +363,11 @@ new class extends Component {
         }
 
         try {
+            $booking->load(['room.category']);
             broadcast(new NewBookingReceived($booking));
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('NewBookingReceived broadcast error: '.$e->getMessage());
+        }
 
         return redirect()->route('booking.confirmation', $booking)
             ->with('success', "Booking {$booking->booking_code} confirmed!");

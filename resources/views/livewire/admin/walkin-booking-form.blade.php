@@ -364,8 +364,11 @@ new class extends Component {
         }
 
         try {
-            broadcast(new NewBookingReceived($booking))->toOthers();
-        } catch (\Throwable) {}
+            $booking->load(['room.category']);
+            broadcast(new NewBookingReceived($booking));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('NewBookingReceived walk-in broadcast error: '.$e->getMessage());
+        }
 
         session()->flash('success', "Walk-in booking {$booking->booking_code} registered successfully!");
         $this->redirect(route('admin.bookings.show', $booking));

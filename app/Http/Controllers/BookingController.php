@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\BookingCancelled;
 use App\Events\NewBookingReceived;
 use App\Models\AddonService;
 use App\Models\Booking;
@@ -12,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -149,9 +151,10 @@ class BookingController extends Controller
 
         // Broadcast to admin panel
         try {
+            $booking->load(['room.category']);
             broadcast(new NewBookingReceived($booking));
-        } catch (\Throwable) {
-            // Reverb broadcast failure is non-fatal
+        } catch (\Throwable $e) {
+            Log::warning('NewBookingReceived broadcast error: '.$e->getMessage());
         }
 
         return redirect()->route('booking.confirmation', $booking)
@@ -181,6 +184,12 @@ class BookingController extends Controller
         }
 
         $booking->update(['status' => 'cancelled']);
+
+        try {
+            broadcast(new BookingCancelled($booking))->toOthers();
+        } catch (\Throwable $e) {
+            Log::warning('BookingCancelled broadcast error: '.$e->getMessage());
+        }
 
         return redirect()->route('customer.bookings')
             ->with('success', "Booking {$booking->booking_code} has been cancelled.");
