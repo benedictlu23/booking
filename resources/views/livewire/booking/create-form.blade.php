@@ -5,6 +5,7 @@ use App\Models\AddonService;
 use App\Models\Booking;
 use App\Models\BookingAddon;
 use App\Models\Discount;
+use App\Models\PaymentMethod;
 use App\Models\Room;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Carbon;
@@ -13,6 +14,9 @@ use Livewire\Volt\Component;
 
 new class extends Component {
     public Room $room;
+    public string $guestName = '';
+    public string $guestEmail = '';
+    public string $guestPhone = '';
     public string $checkIn = '';
     public string $checkOut = '';
     public string $bookingType = 'overnight';
@@ -32,7 +36,12 @@ new class extends Component {
 
     public function mount(Room $room, ?string $initialCheckIn = null, ?string $initialCheckOut = null): void
     {
-        $this->room = $room->loadMissing(['category', 'amenities', 'photos']);
+        $this->room = $room->loadMissing(['category', 'amenities', 'photos', 'addonServices']);
+        $user = auth()->user();
+        $this->guestName = (string) old('guest_name', $user?->name ?? '');
+        $this->guestEmail = (string) old('guest_email', $user?->email ?? '');
+        $this->guestPhone = (string) old('guest_phone', $user?->phone_number ?? '');
+
         $explicitCheckIn = $initialCheckIn ?: request('check_in');
         $this->checkIn = $explicitCheckIn ?: today()->format('Y-m-d');
         $this->checkOut = $initialCheckOut ?: request('check_out', today()->addDay()->format('Y-m-d'));
@@ -46,7 +55,9 @@ new class extends Component {
             'day_pass'  => 'day_pass',
             default     => in_array($requestedType, ['overnight', 'day_pass']) ? $requestedType : 'overnight',
         };
-        $this->paymentMethod = request('payment_method', 'cash');
+
+        $firstEnabled = PaymentMethod::enabled()->first();
+        $this->paymentMethod = request('payment_method', $firstEnabled?->code ?? 'cash');
 
         if ($this->bookingType === 'day_pass') {
             $this->checkOut = $this->checkIn;
@@ -153,7 +164,21 @@ new class extends Component {
 
     public function getAvailableAddonsProperty(): EloquentCollection
     {
+        if ($this->room->addonServices()->exists()) {
+            return $this->room->addonServices()->where('is_active', true)->get();
+        }
+
         return AddonService::where('is_active', true)->orderBy('sort_order')->get();
+    }
+
+    public function getPaymentMethodsProperty(): EloquentCollection
+    {
+        return PaymentMethod::enabled()->get();
+    }
+
+    public function getSelectedPaymentMethodProperty(): ?PaymentMethod
+    {
+        return PaymentMethod::where('code', $this->paymentMethod)->first();
     }
 
     public function getNightsProperty(): int
@@ -271,10 +296,18 @@ new class extends Component {
 
     public function setAddonQty(int $addonId, int $qty): void
     {
+        $addons = $this->availableAddons->keyBy('id');
+        if (! isset($addons[$addonId])) {
+            return;
+        }
+
+        $rawMax = $addons[$addonId]->pivot->max_quantity ?? null;
+        $maxQty = (!empty($rawMax) && (int) $rawMax > 0) ? (int) $rawMax : 99;
+
         if ($qty <= 0) {
             unset($this->addonQuantities[$addonId]);
         } else {
-            $this->addonQuantities[$addonId] = min(10, $qty);
+            $this->addonQuantities[$addonId] = min($maxQty, $qty);
         }
         $this->recalculateDiscount();
     }
@@ -287,15 +320,19 @@ new class extends Component {
         }
 
         $this->validate([
+            'guestName' => ['required', 'string', 'max:255'],
+            'guestEmail' => ['required', 'email', 'max:255'],
+            'guestPhone' => ['required', 'string', 'min:7', 'max:30'],
             'checkIn' => ['required', 'date', 'after_or_equal:today'],
             'checkOut' => ['required', 'date', $isDayPass ? 'same:checkIn' : 'after:checkIn'],
             'adults' => ['required', 'integer', 'min:1', 'max:'.$this->room->capacity_adults],
             'children' => ['nullable', 'integer', 'min:0'],
             'pets' => ['nullable', 'integer', 'min:0'],
             'bookingType' => ['required', 'in:overnight,day_pass'],
-            'paymentMethod' => ['required', 'in:cash,bank_transfer,gcash'],
+            'paymentMethod' => ['required', 'string', 'exists:room_payment_methods,code'],
             'specialRequests' => ['nullable', 'string', 'max:1000'],
         ], [
+            'guestPhone.required' => 'Please provide a valid contact phone number for booking updates.',
             'checkOut.same' => 'For Day Pass, the Check-Out date must be the same as the Check-In date.',
             'checkOut.after' => 'Check-out date must be after check-in date for overnight stays.',
         ]);
@@ -309,16 +346,48 @@ new class extends Component {
             return;
         }
 
+        // Validate add-on scoped limits
+        $scoped = $this->availableAddons->keyBy('id');
+        foreach ($this->addonQuantities as $addonId => $qty) {
+            $qty = (int) $qty;
+            if ($qty <= 0) {
+                continue;
+            }
+            if (! isset($scoped[$addonId])) {
+                $this->addError('addonQuantities', 'One or more selected add-ons are not available for this room.');
+                return;
+            }
+            $rawAllowed = $scoped[$addonId]->pivot->max_quantity ?? null;
+            if (!empty($rawAllowed) && (int) $rawAllowed > 0 && $qty > (int) $rawAllowed) {
+                $this->addError('addonQuantities', "Maximum quantity for {$scoped[$addonId]->name} is {$rawAllowed}.");
+                return;
+            }
+        }
+
         $user = auth()->user();
+
+        // Sync missing profile details if user authenticated
+        if ($user) {
+            $updates = [];
+            if (empty($user->phone_number) && ! empty($this->guestPhone)) {
+                $updates['phone_number'] = $this->guestPhone;
+            }
+            if (empty($user->name) && ! empty($this->guestName)) {
+                $updates['name'] = $this->guestName;
+            }
+            if (! empty($updates)) {
+                $user->update($updates);
+            }
+        }
 
         $booking = Booking::create([
             'booking_code' => 'AGRO-'.strtoupper(Str::random(8)),
             'room_id' => $this->room->id,
             'user_id' => $user?->id,
             'discount_id' => $this->discountValid ? $this->discountId : null,
-            'guest_name' => $user?->name ?? 'Guest',
-            'guest_email' => $user?->email,
-            'guest_phone' => $user?->phone_number,
+            'guest_name' => $this->guestName,
+            'guest_email' => $this->guestEmail,
+            'guest_phone' => $this->guestPhone,
             'check_in' => $this->checkIn,
             'check_out' => $this->checkOut,
             'booking_type' => $this->bookingType,
@@ -392,6 +461,63 @@ new class extends Component {
                     </ul>
                 </div>
             @endif
+
+            {{-- Guest Contact Information --}}
+            <div class="bg-white rounded-3xl p-7 shadow-[0_4px_24px_-4px_rgba(35,61,50,0.06)] border border-[#233D32]/10 space-y-5">
+                <div class="border-b border-[#233D32]/10 pb-4">
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Primary Guest</span>
+                    <h2 class="font-serif font-bold text-xl text-[#233D32]">Guest Details</h2>
+                    <p class="text-xs text-[#777A72] font-light mt-0.5">Please confirm your contact details to receive your reservation confirmation folio.</p>
+                </div>
+
+                @if(auth()->check() && empty(auth()->user()->phone_number))
+                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+                        <span class="text-lg">📱</span>
+                        <div class="text-xs text-amber-900">
+                            <p class="font-semibold">Contact phone number required</p>
+                            <p class="font-light mt-0.5">Your Google account does not have a contact number. Please enter your mobile number below so our front desk can coordinate your arrival.</p>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Full Name *</label>
+                        <input type="text"
+                               wire:model.live="guestName"
+                               required
+                               placeholder="e.g. Juan dela Cruz"
+                               class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] @error('guestName') border-rose-400 @enderror">
+                        @error('guestName')
+                            <span class="text-xs text-rose-600 mt-1 block font-medium">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Email Address *</label>
+                        <input type="email"
+                               wire:model.live="guestEmail"
+                               required
+                               placeholder="e.g. juan@example.com"
+                               class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] @error('guestEmail') border-rose-400 @enderror">
+                        @error('guestEmail')
+                            <span class="text-xs text-rose-600 mt-1 block font-medium">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Mobile / Phone Number *</label>
+                        <input type="text"
+                               wire:model.live="guestPhone"
+                               required
+                               placeholder="e.g. 0917-123-4567"
+                               class="w-full px-3.5 py-2.5 border border-[#233D32]/15 rounded-xl text-sm font-medium text-[#292D29] bg-[#FAF8F4] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32] @error('guestPhone') border-rose-400 @enderror">
+                        @error('guestPhone')
+                            <span class="text-xs text-rose-600 mt-1 block font-medium">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+            </div>
 
             {{-- 1. Schedule & Stay Duration --}}
             <div class="bg-white rounded-3xl p-7 shadow-[0_4px_24px_-4px_rgba(35,61,50,0.06)] border border-[#233D32]/10 space-y-5">
@@ -501,7 +627,7 @@ new class extends Component {
             <div class="bg-white rounded-3xl p-7 shadow-[0_4px_24px_-4px_rgba(35,61,50,0.06)] border border-[#233D32]/10 space-y-5">
                 <div class="border-b border-[#233D32]/10 pb-4">
                     <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Step 2</span>
-                    <h2 class="font-serif font-bold text-xl text-[#233D32]">Guests & Pets</h2>
+                    <h2 class="font-serif font-bold text-xl text-[#233D32]">Guests</h2>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -553,7 +679,14 @@ new class extends Component {
                             <div class="flex items-center gap-4 p-4 rounded-2xl border transition-all {{ $qty > 0 ? 'border-[#A68B61] bg-[#FAF8F4]' : 'border-[#233D32]/10 hover:border-[#233D32]/30 bg-white' }}">
                                 <span class="text-3xl shrink-0">{{ $addon->icon ?? '🌿' }}</span>
                                 <div class="flex-1 min-w-0">
-                                    <p class="font-serif font-bold text-[#233D32] text-sm leading-snug">{{ $addon->name }}</p>
+                                    <div class="flex items-center gap-2">
+                                        <p class="font-serif font-bold text-[#233D32] text-sm leading-snug">{{ $addon->name }}</p>
+                                        @if(!empty($addon->pivot->max_quantity) && (int) $addon->pivot->max_quantity > 0)
+                                            <span class="px-2 py-0.5 bg-white border border-[#233D32]/10 text-[10px] font-mono font-semibold rounded text-[#233D32]">
+                                                Limit: {{ $addon->pivot->max_quantity }}
+                                            </span>
+                                        @endif
+                                    </div>
                                     @if($addon->description)
                                         <p class="text-xs text-[#777A72] font-light mt-0.5 leading-relaxed">{{ $addon->description }}</p>
                                     @endif
@@ -571,7 +704,8 @@ new class extends Component {
                                     <span class="w-7 text-center font-bold text-sm text-[#233D32]">{{ $qty }}</span>
                                     <button type="button"
                                             wire:click="setAddonQty({{ $addon->id }}, {{ $qty + 1 }})"
-                                            class="w-8 h-8 rounded-lg bg-[#233D32] hover:bg-[#172A22] text-[#F7F5EF] font-bold text-sm flex items-center justify-center transition-colors shadow-xs">
+                                            @disabled(!empty($addon->pivot->max_quantity) && (int) $addon->pivot->max_quantity > 0 && $qty >= (int) $addon->pivot->max_quantity)
+                                            class="w-8 h-8 rounded-lg font-bold text-sm flex items-center justify-center transition-colors shadow-xs {{ (!empty($addon->pivot->max_quantity) && (int) $addon->pivot->max_quantity > 0 && $qty >= (int) $addon->pivot->max_quantity) ? 'bg-stone-200 text-stone-400 cursor-not-allowed' : 'bg-[#233D32] hover:bg-[#172A22] text-[#F7F5EF]' }}">
                                         +
                                     </button>
                                 </div>
@@ -586,33 +720,69 @@ new class extends Component {
                 <div class="border-b border-[#233D32]/10 pb-4">
                     <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61]">Step 4</span>
                     <h2 class="font-serif font-bold text-xl text-[#233D32]">Payment Method</h2>
+                    <p class="text-xs text-[#777A72] font-light mt-0.5">Select your preferred payment channel for settling your stay charges</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                    <label class="p-4 border rounded-2xl flex items-start gap-3.5 cursor-pointer transition-all {{ $paymentMethod === 'cash' ? 'border-[#233D32] bg-[#FAF8F4] shadow-xs' : 'border-[#233D32]/15 hover:border-[#233D32]/40' }}">
-                        <input type="radio" wire:model.live="paymentMethod" value="cash" class="mt-0.5 text-[#233D32] focus:ring-[#233D32]">
-                        <div>
-                            <p class="font-semibold text-xs uppercase tracking-wider text-[#233D32]">Cash on Arrival</p>
-                            <p class="text-[11px] text-[#777A72] font-light mt-0.5">Settle directly at front desk</p>
+                    @forelse($this->paymentMethods as $method)
+                        <label class="p-4 border rounded-2xl flex items-start gap-3.5 cursor-pointer transition-all {{ $paymentMethod === $method->code ? 'border-[#233D32] bg-[#FAF8F4] shadow-xs' : 'border-[#233D32]/15 hover:border-[#233D32]/40 bg-white' }}">
+                            <input type="radio" wire:model.live="paymentMethod" value="{{ $method->code }}" class="mt-0.5 text-[#233D32] focus:ring-[#233D32]">
+                            <div class="min-w-0">
+                                <p class="font-semibold text-xs uppercase tracking-wider text-[#233D32]">{{ $method->name }}</p>
+                                @if($method->account_name)
+                                    <p class="text-[11px] text-[#292D29] font-medium truncate mt-0.5">{{ $method->account_name }}</p>
+                                @endif
+                                @if($method->account_number)
+                                    <p class="font-mono text-[10px] text-[#777A72]">{{ $method->account_number }}</p>
+                                @endif
+                            </div>
+                        </label>
+                    @empty
+                        <div class="col-span-3 p-4 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-500">
+                            No active payment methods currently configured.
                         </div>
-                    </label>
-
-                    <label class="p-4 border rounded-2xl flex items-start gap-3.5 cursor-pointer transition-all {{ $paymentMethod === 'gcash' ? 'border-[#233D32] bg-[#FAF8F4] shadow-xs' : 'border-[#233D32]/15 hover:border-[#233D32]/40' }}">
-                        <input type="radio" wire:model.live="paymentMethod" value="gcash" class="mt-0.5 text-[#233D32] focus:ring-[#233D32]">
-                        <div>
-                            <p class="font-semibold text-xs uppercase tracking-wider text-[#233D32]">GCash</p>
-                            <p class="text-[11px] text-[#777A72] font-light mt-0.5">Online mobile wallet</p>
-                        </div>
-                    </label>
-
-                    <label class="p-4 border rounded-2xl flex items-start gap-3.5 cursor-pointer transition-all {{ $paymentMethod === 'bank_transfer' ? 'border-[#233D32] bg-[#FAF8F4] shadow-xs' : 'border-[#233D32]/15 hover:border-[#233D32]/40' }}">
-                        <input type="radio" wire:model.live="paymentMethod" value="bank_transfer" class="mt-0.5 text-[#233D32] focus:ring-[#233D32]">
-                        <div>
-                            <p class="font-semibold text-xs uppercase tracking-wider text-[#233D32]">Bank Transfer</p>
-                            <p class="text-[11px] text-[#777A72] font-light mt-0.5">Direct deposit to BDO</p>
-                        </div>
-                    </label>
+                    @endforelse
                 </div>
+
+                @php
+                    $selected = $this->selectedPaymentMethod;
+                @endphp
+                @if($selected)
+                    @if($selected->instructions || $selected->qr_code_path)
+                        <div class="mt-4 p-5 bg-[#FAF8F4] border border-[#233D32]/10 rounded-2xl flex flex-col sm:flex-row items-center gap-6">
+                            @if($selected->qr_code_path)
+                                <div class="w-36 h-36 bg-white p-2 rounded-xl border border-stone-200 shadow-xs flex items-center justify-center shrink-0">
+                                    <img src="{{ $selected->qr_code_url ?? (str_starts_with($selected->qr_code_path, 'http') ? $selected->qr_code_path : asset('storage/' . $selected->qr_code_path)) }}" alt="{{ $selected->name }} QR Code" class="w-full h-full object-contain">
+                                </div>
+                            @endif
+                            <div class="space-y-2 text-center sm:text-left flex-1">
+                                <p class="font-serif font-bold text-sm text-[#233D32]">{{ $selected->name }} Payment Details</p>
+                                @if($selected->instructions)
+                                    <p class="text-xs text-[#595D58] font-light leading-relaxed whitespace-pre-line">{{ $selected->instructions }}</p>
+                                @endif
+                                @if($selected->account_number)
+                                    <p class="text-xs text-[#292D29]">
+                                        <span class="text-[#777A72]">Account / Mobile:</span>
+                                        <span class="font-mono font-bold">{{ $selected->account_number }}</span>
+                                        @if($selected->account_name)
+                                            <span class="text-[#777A72]">({{ $selected->account_name }})</span>
+                                        @endif
+                                    </p>
+                                @endif
+                                @if($selected->qr_code_path)
+                                    <div class="pt-1">
+                                        <a href="{{ $selected->qr_code_url ?? (str_starts_with($selected->qr_code_path, 'http') ? $selected->qr_code_path : asset('storage/' . $selected->qr_code_path)) }}"
+                                           download="{{ $selected->code }}-qr-code"
+                                           class="inline-flex items-center gap-2 px-4 py-2 bg-[#233D32] hover:bg-[#172A22] text-[#F7F5EF] text-xs font-semibold rounded-xl uppercase tracking-wider transition-all shadow-xs">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                            <span>Download QR Code</span>
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                @endif
             </div>
 
             {{-- 5. Promotion & Special Requests --}}

@@ -40,8 +40,12 @@
                         Home
                     </a>
                     <a href="{{ route('rooms.search') }}"
-                       class="text-xs font-semibold uppercase tracking-wider text-[#292D29]/80 hover:text-[#233D32] transition-colors {{ request()->routeIs('rooms.*') ? 'text-[#233D32] border-b-2 border-[#A68B61] pb-1' : '' }}">
-                        Rooms & Cottages
+                       class="text-xs font-semibold uppercase tracking-wider text-[#292D29]/80 hover:text-[#233D32] transition-colors {{ request()->routeIs('rooms.search') ? 'text-[#233D32] border-b-2 border-[#A68B61] pb-1' : '' }}">
+                        Rooms
+                    </a>
+                    <a href="{{ route('cottages.search') }}"
+                       class="text-xs font-semibold uppercase tracking-wider text-[#292D29]/80 hover:text-[#233D32] transition-colors {{ request()->routeIs('cottages.search') ? 'text-[#233D32] border-b-2 border-[#A68B61] pb-1' : '' }}">
+                        Cottages
                     </a>
                     <a href="{{ route('home') }}#amenities"
                        class="text-xs font-semibold uppercase tracking-wider text-[#292D29]/80 hover:text-[#233D32] transition-colors">
@@ -160,7 +164,8 @@
              class="lg:hidden border-t border-[#233D32]/10 bg-[#F7F5EF] shadow-xl">
             <div class="px-5 py-5 space-y-2">
                 <a href="{{ route('home') }}" class="block px-3 py-2.5 text-sm font-semibold text-[#292D29] rounded-lg hover:bg-[#EFEBE1]">Home</a>
-                <a href="{{ route('rooms.search') }}" class="block px-3 py-2.5 text-sm font-semibold text-[#292D29] rounded-lg hover:bg-[#EFEBE1]">Rooms & Cottages</a>
+                <a href="{{ route('rooms.search') }}" class="block px-3 py-2.5 text-sm font-semibold text-[#292D29] rounded-lg hover:bg-[#EFEBE1]">Rooms</a>
+                <a href="{{ route('cottages.search') }}" class="block px-3 py-2.5 text-sm font-semibold text-[#292D29] rounded-lg hover:bg-[#EFEBE1]">Cottages</a>
                 <a href="{{ route('home') }}#amenities" class="block px-3 py-2.5 text-sm font-semibold text-[#292D29] rounded-lg hover:bg-[#EFEBE1]">Amenities</a>
                 <a href="{{ route('home') }}#location" class="block px-3 py-2.5 text-sm font-semibold text-[#292D29] rounded-lg hover:bg-[#EFEBE1]">Location</a>
                 @auth

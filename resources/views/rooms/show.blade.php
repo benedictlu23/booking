@@ -60,9 +60,14 @@
                     <div class="bg-white rounded-3xl p-8 shadow-[0_4px_24px_-4px_rgba(35,61,50,0.06)] border border-[#233D32]/10">
                         <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
                             <div>
-                                <span class="px-3 py-1 bg-[#EFEBE1] text-[#233D32] text-xs uppercase tracking-wider font-semibold rounded-lg border border-[#233D32]/10">
-                                    {{ $room->category->name }}
-                                </span>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-3 py-1 bg-[#EFEBE1] text-[#233D32] text-xs uppercase tracking-wider font-semibold rounded-lg border border-[#233D32]/10">
+                                        {{ $room->category->name }}
+                                    </span>
+                                    <span class="px-3 py-1 text-xs uppercase tracking-wider font-semibold rounded-lg border {{ $room->type === 'cottage' ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-emerald-100 text-emerald-900 border-emerald-300' }}">
+                                        {{ ucfirst($room->type ?? 'room') }}
+                                    </span>
+                                </div>
                                 <h1 class="text-3xl sm:text-4xl font-serif font-bold text-[#233D32] mt-3">{{ $room->name }}</h1>
                                 <p class="text-xs text-[#777A72] font-mono mt-1">Accommodation Unit {{ $room->room_number }}</p>
                             </div>
@@ -139,10 +144,17 @@
                                             @if($addon->description)
                                                 <p class="text-xs text-[#777A72] font-light mt-0.5 leading-relaxed">{{ $addon->description }}</p>
                                             @endif
-                                            <p class="text-xs font-semibold text-[#A68B61] mt-2">
-                                                ₱{{ number_format($addon->price, 2) }}
-                                                <span class="text-[#777A72] font-normal">/ {{ str_replace('_', ' ', $addon->pricing_type) }}</span>
-                                            </p>
+                                            <div class="mt-2 flex items-center justify-between gap-2">
+                                                <p class="text-xs font-semibold text-[#A68B61]">
+                                                    ₱{{ number_format($addon->price, 2) }}
+                                                    <span class="text-[#777A72] font-normal">/ {{ str_replace('_', ' ', $addon->pricing_type) }}</span>
+                                                </p>
+                                                @if(!empty($addon->pivot->max_quantity) && (int) $addon->pivot->max_quantity > 0)
+                                                    <span class="px-2 py-0.5 bg-white border border-[#233D32]/10 text-[10px] font-mono font-medium rounded text-[#233D32]">
+                                                        Limit: {{ $addon->pivot->max_quantity }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 @endforeach

@@ -98,7 +98,12 @@
                             @endif
                         </div>
                         <div class="min-w-0 flex-1">
-                            <span class="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A68B61]">{{ $booking->room?->category?->name }}</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A68B61]">{{ $booking->room?->category?->name }}</span>
+                                <span class="px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider rounded border {{ $booking->room?->type === 'cottage' ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-emerald-100 text-emerald-900 border-emerald-300' }}">
+                                    {{ ucfirst($booking->room?->type ?? 'room') }}
+                                </span>
+                            </div>
                             <p class="font-serif font-bold text-base sm:text-lg text-[#233D32]">{{ $booking->room?->name }}</p>
                             <p class="text-xs text-[#777A72]">Room Unit #{{ $booking->room?->room_number }}</p>
                             @if($booking->special_requests)

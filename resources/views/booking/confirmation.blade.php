@@ -70,6 +70,13 @@
                         </div>
                     </div>
 
+                    {{-- Primary Guest Details --}}
+                    <div class="p-4 bg-[#FAF8F4] rounded-2xl border border-[#233D32]/10 text-xs">
+                        <span class="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#A68B61] block mb-1">Primary Guest Details</span>
+                        <p class="text-sm font-serif font-bold text-[#233D32]">{{ $booking->guest_name }}</p>
+                        <p class="text-[#777A72] mt-0.5">{{ $booking->guest_email }} · <span class="font-mono text-[#292D29] font-medium">{{ $booking->guest_phone }}</span></p>
+                    </div>
+
                     {{-- Room Details --}}
                     <div class="flex items-center gap-4 p-4 border border-[#233D32]/10 rounded-2xl bg-white">
                         <div class="w-16 h-16 rounded-xl overflow-hidden bg-[#FAF8F4] shrink-0 border border-[#233D32]/10">
@@ -78,9 +85,14 @@
                                  class="w-full h-full object-cover">
                         </div>
                         <div>
-                            <span class="px-2 py-0.5 bg-[#EFEBE1] text-[#233D32] text-[10px] font-semibold uppercase tracking-wider rounded">
-                                {{ $booking->room?->category?->name }}
-                            </span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="px-2 py-0.5 bg-[#EFEBE1] text-[#233D32] text-[10px] font-semibold uppercase tracking-wider rounded">
+                                    {{ $booking->room?->category?->name }}
+                                </span>
+                                <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded border {{ $booking->room?->type === 'cottage' ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-emerald-100 text-emerald-900 border-emerald-300' }}">
+                                    {{ ucfirst($booking->room?->type ?? 'room') }}
+                                </span>
+                            </div>
                             <p class="font-serif font-bold text-[#233D32] text-base mt-1">{{ $booking->room?->name }}</p>
                             <p class="text-xs text-[#777A72] font-mono">Unit {{ $booking->room?->room_number }}</p>
                         </div>

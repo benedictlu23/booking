@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AddonService;
 use App\Models\Amenity;
 use App\Models\Room;
 use App\Models\RoomCategory;
@@ -28,8 +29,9 @@ class RoomController extends Controller
     {
         $categories = RoomCategory::where('is_active', true)->get();
         $amenities = Amenity::orderBy('name')->get();
+        $addons = AddonService::where('is_active', true)->orderBy('sort_order')->get();
 
-        return view('admin.rooms.create', compact('categories', 'amenities'));
+        return view('admin.rooms.create', compact('categories', 'amenities', 'addons'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -47,18 +49,38 @@ class RoomController extends Controller
             'floor_number' => ['nullable', 'integer'],
             'status' => ['required', 'in:available,occupied,maintenance,housekeeping,blocked,out_of_service'],
             'booking_type' => ['required', 'in:overnight,day_pass,both'],
+            'type' => ['nullable', 'in:room,cottage'],
             'is_active' => ['boolean'],
             'amenities' => ['nullable', 'array'],
             'amenities.*' => ['exists:room_amenities,id'],
+            'addon_services' => ['nullable', 'array'],
+            'addon_services.*.id' => ['required', 'exists:room_addon_services,id'],
+            'addon_services.*.max_quantity' => ['nullable', 'integer', 'min:1', 'max:99'],
             'photos' => ['nullable', 'array'],
             'photos.*' => ['image', 'max:5120'],
         ]);
 
+        $validated['type'] = $validated['type'] ?? 'room';
         $room = Room::create($validated);
 
         if ($request->has('amenities')) {
             $room->amenities()->sync($request->amenities);
         }
+
+        $addonSync = [];
+        if ($request->has('addon_services')) {
+            foreach ($request->input('addon_services') as $item) {
+                if (! empty($item['id'])) {
+                    $maxQty = ! empty($item['max_quantity']) && (int) $item['max_quantity'] > 0
+                        ? (int) $item['max_quantity']
+                        : null;
+                    $addonSync[(int) $item['id']] = [
+                        'max_quantity' => $maxQty,
+                    ];
+                }
+            }
+        }
+        $room->addonServices()->sync($addonSync);
 
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $index => $photo) {
@@ -78,7 +100,7 @@ class RoomController extends Controller
 
     public function show(Room $room): View
     {
-        $room->load(['category', 'amenities', 'photos', 'bookings' => fn ($q) => $q->latest()->take(10)]);
+        $room->load(['category', 'amenities', 'photos', 'addonServices', 'bookings' => fn ($q) => $q->latest()->take(10)]);
 
         return view('admin.rooms.show', compact('room'));
     }
@@ -87,9 +109,10 @@ class RoomController extends Controller
     {
         $categories = RoomCategory::where('is_active', true)->get();
         $amenities = Amenity::orderBy('name')->get();
-        $room->load(['amenities', 'photos']);
+        $addons = AddonService::where('is_active', true)->orderBy('sort_order')->get();
+        $room->load(['amenities', 'photos', 'addonServices']);
 
-        return view('admin.rooms.edit', compact('room', 'categories', 'amenities'));
+        return view('admin.rooms.edit', compact('room', 'categories', 'amenities', 'addons'));
     }
 
     public function update(Request $request, Room $room): RedirectResponse
@@ -107,13 +130,33 @@ class RoomController extends Controller
             'floor_number' => ['nullable', 'integer'],
             'status' => ['required', 'in:available,occupied,maintenance,housekeeping,blocked,out_of_service'],
             'booking_type' => ['required', 'in:overnight,day_pass,both'],
+            'type' => ['nullable', 'in:room,cottage'],
             'is_active' => ['boolean'],
             'amenities' => ['nullable', 'array'],
             'amenities.*' => ['exists:room_amenities,id'],
+            'addon_services' => ['nullable', 'array'],
+            'addon_services.*.id' => ['required', 'exists:room_addon_services,id'],
+            'addon_services.*.max_quantity' => ['nullable', 'integer', 'min:1', 'max:99'],
         ]);
 
+        $validated['type'] = $validated['type'] ?? $room->type ?? 'room';
         $room->update($validated);
         $room->amenities()->sync($request->amenities ?? []);
+
+        $addonSync = [];
+        if ($request->has('addon_services')) {
+            foreach ($request->input('addon_services') as $item) {
+                if (! empty($item['id'])) {
+                    $maxQty = ! empty($item['max_quantity']) && (int) $item['max_quantity'] > 0
+                        ? (int) $item['max_quantity']
+                        : null;
+                    $addonSync[(int) $item['id']] = [
+                        'max_quantity' => $maxQty,
+                    ];
+                }
+            }
+        }
+        $room->addonServices()->sync($addonSync);
 
         if ($request->hasFile('photos')) {
             $hasCover = $room->photos()->where('is_cover', true)->exists();

@@ -6,6 +6,7 @@ use Database\Factories\AddonServiceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['name', 'description', 'icon', 'pricing_type', 'price', 'is_active', 'sort_order'])]
@@ -28,5 +29,12 @@ class AddonService extends Model
     public function bookingAddons(): HasMany
     {
         return $this->hasMany(BookingAddon::class);
+    }
+
+    public function rooms(): BelongsToMany
+    {
+        return $this->belongsToMany(Room::class, 'room_room_addon_services', 'addon_service_id', 'room_id')
+            ->withPivot('max_quantity')
+            ->withTimestamps();
     }
 }

@@ -15,6 +15,7 @@ new class extends Component {
     public int $children = 0;
     public int $pets = 0;
     public string $bookingType = ''; // empty = show all types by default
+    public string $type = ''; // empty = show both rooms and cottages
     public ?int $categoryId = null;
     public ?float $minPrice = null;
     public ?float $maxPrice = null;
@@ -30,7 +31,8 @@ new class extends Component {
         ?string $initialBookingType = null,
         ?int $initialCategoryId = null,
         ?float $initialMinPrice = null,
-        ?float $initialMaxPrice = null
+        ?float $initialMaxPrice = null,
+        ?string $initialType = null
     ): void {
         $this->checkIn = $initialCheckIn ?: request('check_in', today()->format('Y-m-d'));
         $this->checkOut = $initialCheckOut ?: request('check_out', today()->addDay()->format('Y-m-d'));
@@ -38,6 +40,7 @@ new class extends Component {
         $this->children = (int) ($initialChildren ?: request('children', 0));
         $this->pets = (int) ($initialPets ?: request('pets', 0));
         $this->bookingType = $initialBookingType ?? request('booking_type', '');
+        $this->type = $initialType ?? request('type', '');
         if ($this->bookingType === 'day_pass') {
             $this->checkOut = $this->checkIn;
         }
@@ -83,6 +86,7 @@ new class extends Component {
         $this->children = 0;
         $this->pets = 0;
         $this->bookingType = '';
+        $this->type = '';
     }
 
     public function getCategoriesProperty(): EloquentCollection
@@ -108,6 +112,7 @@ new class extends Component {
             ->where('is_active', true)
             ->whereNotIn('status', ['maintenance', 'out_of_service', 'blocked'])
             ->where('capacity_adults', '>=', max(1, $this->adults))
+            ->when($this->type, fn ($q) => $q->where('type', $this->type))
             ->when($this->pets > 0, fn ($q) => $q->where('allows_pets', true))
             ->when($this->categoryId, fn ($q) => $q->where('category_id', $this->categoryId))
             ->when($this->minPrice !== null && $this->minPrice > 0, fn ($q) => $q->where('base_price', '>=', $this->minPrice))
@@ -134,14 +139,36 @@ new class extends Component {
     {{-- Search Header --}}
     <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#233D32]/10 pb-6">
         <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EFEBE1] text-[#233D32] text-xs font-semibold uppercase tracking-wider mb-3">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#A68B61]"></span>
-                <span>Active Availability</span>
+            <div class="flex items-center gap-2 mb-3">
+                <button type="button" wire:click="$set('type', '')"
+                        class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider transition-all {{ empty($type) ? 'bg-[#233D32] text-[#F7F5EF] shadow-xs' : 'bg-[#EFEBE1] text-[#233D32] hover:bg-[#E2DDD0]' }}">
+                    All Units
+                </button>
+                <button type="button" wire:click="$set('type', 'room')"
+                        class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider transition-all {{ $type === 'room' ? 'bg-[#233D32] text-[#F7F5EF] shadow-xs' : 'bg-[#EFEBE1] text-[#233D32] hover:bg-[#E2DDD0]' }}">
+                    Rooms
+                </button>
+                <button type="button" wire:click="$set('type', 'cottage')"
+                        class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider transition-all {{ $type === 'cottage' ? 'bg-[#233D32] text-[#F7F5EF] shadow-xs' : 'bg-[#EFEBE1] text-[#233D32] hover:bg-[#E2DDD0]' }}">
+                    Cottages
+                </button>
             </div>
-            <h1 class="text-3xl sm:text-4xl font-serif font-bold text-[#233D32]">Accommodations & Suites</h1>
-            <p class="text-sm text-[#777A72] mt-1.5 font-light">
-                <span class="font-bold text-[#233D32]">{{ $this->rooms->count() }}</span> accommodation unit(s) available for your selected dates and criteria
-            </p>
+            @if($type === 'cottage')
+                <h1 class="text-3xl sm:text-4xl font-serif font-bold text-[#233D32]">Resort Cottages & Villas</h1>
+                <p class="text-sm text-[#777A72] mt-1.5 font-light">
+                    Private countryside cottages and open-air gazebo units surrounded by nature
+                </p>
+            @elseif($type === 'room')
+                <h1 class="text-3xl sm:text-4xl font-serif font-bold text-[#233D32]">Guest Rooms & Suites</h1>
+                <p class="text-sm text-[#777A72] mt-1.5 font-light">
+                    Spacious air-conditioned accommodation units and retreat suites
+                </p>
+            @else
+                <h1 class="text-3xl sm:text-4xl font-serif font-bold text-[#233D32]">Accommodations & Suites</h1>
+                <p class="text-sm text-[#777A72] mt-1.5 font-light">
+                    <span class="font-bold text-[#233D32]">{{ $this->rooms->count() }}</span> accommodation unit(s) available for your selected dates and criteria
+                </p>
+            @endif
         </div>
 
         {{-- Quick Search Input --}}
@@ -297,6 +324,9 @@ new class extends Component {
                                 <div class="absolute top-3.5 left-3.5 flex gap-2">
                                     <span class="px-2.5 py-1 bg-[#172A22]/85 backdrop-blur-md text-[11px] uppercase tracking-wider font-semibold text-[#F7F5EF] rounded-lg border border-white/10">
                                         {{ $room->category?->name }}
+                                    </span>
+                                    <span class="px-2.5 py-1 text-[11px] uppercase tracking-wider font-semibold rounded-lg border shadow-xs backdrop-blur-md {{ $room->type === 'cottage' ? 'bg-amber-100/90 text-amber-900 border-amber-300' : 'bg-emerald-100/90 text-emerald-900 border-emerald-300' }}">
+                                        {{ ucfirst($room->type ?? 'room') }}
                                     </span>
                                     @if($room->allows_pets)
                                         <span class="px-2 py-1 bg-[#EFEBE1]/90 backdrop-blur-md text-[#233D32] text-[11px] font-semibold rounded-lg border border-[#233D32]/10 shadow-xs">🐾 Pet OK</span>

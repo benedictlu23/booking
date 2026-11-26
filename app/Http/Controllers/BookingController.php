@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -37,21 +38,38 @@ class BookingController extends Controller
             $request->merge(['check_out' => $request->input('check_in')]);
         }
 
+        if (auth()->check()) {
+            $authUser = auth()->user();
+            if (! $request->filled('guest_name')) {
+                $request->merge(['guest_name' => ! empty($authUser->name) ? $authUser->name : 'Guest User']);
+            }
+            if (! $request->filled('guest_email')) {
+                $request->merge(['guest_email' => ! empty($authUser->email) ? $authUser->email : 'guest@example.com']);
+            }
+            if (! $request->filled('guest_phone')) {
+                $request->merge(['guest_phone' => ! empty($authUser->phone) ? $authUser->phone : '09123456789']);
+            }
+        }
+
         $validated = $request->validate([
             'room_id' => ['required', 'exists:rooms,id'],
+            'guest_name' => ['required', 'string', 'max:255'],
+            'guest_email' => ['required', 'email', 'max:255'],
+            'guest_phone' => ['required', 'string', 'min:7', 'max:30'],
             'check_in' => ['required', 'date', 'after_or_equal:today'],
             'check_out' => ['required', 'date', $isDayPass ? 'same:check_in' : 'after:check_in'],
             'adults' => ['required', 'integer', 'min:1'],
             'children' => ['nullable', 'integer', 'min:0'],
             'pets' => ['nullable', 'integer', 'min:0'],
             'booking_type' => ['required', 'in:overnight,day_pass'],
-            'payment_method' => ['nullable', 'string', 'in:cash,bank_transfer,gcash'],
+            'payment_method' => ['required', 'string'],
             'special_requests' => ['nullable', 'string', 'max:1000'],
             'discount_code' => ['nullable', 'string'],
             'addons' => ['nullable', 'array'],
             'addons.*.id' => ['nullable', 'exists:room_addon_services,id'],
             'addons.*.quantity' => ['nullable', 'integer', 'min:0'],
         ], [
+            'guest_phone.required' => 'Please provide a valid phone number for booking updates.',
             'check_out.same' => 'For Day Pass, the Check-Out date must be the same as the Check-In date.',
             'check_out.after' => 'Check-out date must be after check-in date for overnight stays.',
         ]);
@@ -73,32 +91,58 @@ class BookingController extends Controller
         $basePrice = (float) $room->base_price * $nights;
         $petFeeTotal = ((int) ($validated['pets'] ?? 0)) > 0 ? ((float) $room->pet_fee * $nights * (int) $validated['pets']) : 0;
 
-        // Calculate addons total (strictly optional, server-driven pricing)
+        // Calculate addons total (scoped to this room with max quantity limits)
         $addonsTotal = 0;
         $selectedAddons = [];
+        $scopedAddons = $room->addonServices()->exists()
+            ? $room->addonServices()->where('is_active', true)->get()->keyBy('id')
+            : AddonService::where('is_active', true)->get()->keyBy('id');
+
         if (! empty($validated['addons'])) {
             foreach ($validated['addons'] as $addonData) {
                 $qty = (int) ($addonData['quantity'] ?? 0);
                 if ($qty <= 0 || empty($addonData['id'])) {
                     continue;
                 }
-                $addon = AddonService::find($addonData['id']);
-                if ($addon && $addon->is_active) {
-                    $multiplier = match ($addon->pricing_type) {
-                        'per_night' => $nights,
-                        'per_person' => (int) $validated['adults'] + (int) ($validated['children'] ?? 0),
-                        default => 1,
-                    };
-                    $subtotal = round((float) $addon->price * $qty * $multiplier, 2);
-                    $addonsTotal += $subtotal;
-                    $selectedAddons[] = [
-                        'addon_service_id' => $addon->id,
-                        'item_name' => $addon->name,
-                        'quantity' => $qty,
-                        'unit_price' => (float) $addon->price,
-                        'subtotal' => $subtotal,
-                    ];
+                $addonId = (int) $addonData['id'];
+                if (! isset($scopedAddons[$addonId])) {
+                    return back()->withErrors(['addons' => 'One or more selected add-ons are not available for this room.'])->withInput();
                 }
+
+                $addon = $scopedAddons[$addonId];
+                $rawLimit = $addon->pivot->max_quantity ?? null;
+                if (! empty($rawLimit) && (int) $rawLimit > 0 && $qty > (int) $rawLimit) {
+                    return back()->withErrors(['addons' => "Maximum quantity for {$addon->name} is {$rawLimit}."])->withInput();
+                }
+
+                $multiplier = match ($addon->pricing_type) {
+                    'per_night' => $nights,
+                    'per_person' => (int) $validated['adults'] + (int) ($validated['children'] ?? 0),
+                    default => 1,
+                };
+                $subtotal = round((float) $addon->price * $qty * $multiplier, 2);
+                $addonsTotal += $subtotal;
+                $selectedAddons[] = [
+                    'addon_service_id' => $addon->id,
+                    'item_name' => $addon->name,
+                    'quantity' => $qty,
+                    'unit_price' => (float) $addon->price,
+                    'subtotal' => $subtotal,
+                ];
+            }
+        }
+
+        // If user is authenticated and missing phone_number or name, update user profile safely
+        if ($user) {
+            $userUpdates = [];
+            if (Schema::hasColumn('users', 'phone_number') && empty($user->phone_number) && filled($validated['guest_phone'])) {
+                $userUpdates['phone_number'] = $validated['guest_phone'];
+            }
+            if (empty($user->name) && filled($validated['guest_name'])) {
+                $userUpdates['name'] = $validated['guest_name'];
+            }
+            if (! empty($userUpdates)) {
+                $user->update($userUpdates);
             }
         }
 
@@ -123,11 +167,11 @@ class BookingController extends Controller
             'room_id' => $room->id,
             'user_id' => $user?->id,
             'discount_id' => $discountId,
-            'guest_name' => $user?->name ?? $request->input('guest_name', 'Guest'),
-            'guest_email' => $user?->email ?? $request->input('guest_email'),
-            'guest_phone' => $user?->phone_number ?? $request->input('guest_phone'),
-            'check_in' => $validated['check_in'],
-            'check_out' => $validated['check_out'],
+            'guest_name' => $validated['guest_name'],
+            'guest_email' => $validated['guest_email'],
+            'guest_phone' => $validated['guest_phone'],
+            'check_in' => Carbon::parse($validated['check_in'])->startOfDay(),
+            'check_out' => Carbon::parse($validated['check_out'])->startOfDay(),
             'booking_type' => $validated['booking_type'],
             'adults' => (int) $validated['adults'],
             'children' => (int) ($validated['children'] ?? 0),

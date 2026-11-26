@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AddonService;
 use App\Models\Carousel;
 use App\Models\ResortSetting;
 use App\Models\Room;
@@ -44,6 +43,20 @@ class RoomSearchController extends Controller
         ));
     }
 
+    public function searchRooms(Request $request): View
+    {
+        $request->merge(['type' => 'room']);
+
+        return $this->search($request);
+    }
+
+    public function searchCottages(Request $request): View
+    {
+        $request->merge(['type' => 'cottage']);
+
+        return $this->search($request);
+    }
+
     public function search(Request $request): View
     {
         $checkIn = $request->get('check_in', today()->format('Y-m-d'));
@@ -55,11 +68,13 @@ class RoomSearchController extends Controller
         $maxPrice = $request->get('max_price');
         $minPrice = $request->get('min_price');
         $bookingType = $request->get('booking_type', '');
+        $type = $request->get('type', '');
 
         $rooms = Room::with(['category', 'photos', 'amenities'])
             ->where('is_active', true)
             ->whereNotIn('status', ['maintenance', 'out_of_service', 'blocked'])
             ->where('capacity_adults', '>=', $adults)
+            ->when($type, fn ($q) => $q->where('type', $type))
             ->when($pets > 0, fn ($q) => $q->where('allows_pets', true))
             ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
             ->when($maxPrice, fn ($q) => $q->where('base_price', '<=', $maxPrice))
@@ -79,7 +94,7 @@ class RoomSearchController extends Controller
 
         return view('rooms.search', compact(
             'rooms', 'categories', 'checkIn', 'checkOut',
-            'adults', 'children', 'pets', 'bookingType', 'petPolicy'
+            'adults', 'children', 'pets', 'bookingType', 'petPolicy', 'type'
         ));
     }
 
@@ -87,7 +102,7 @@ class RoomSearchController extends Controller
     {
         $room->load(['category', 'amenities', 'photos']);
 
-        $addons = AddonService::where('is_active', true)->orderBy('sort_order')->get();
+        $addons = $room->addonServices()->where('is_active', true)->get();
 
         $petPolicy = ResortSetting::get('pet_policy', 'Pets are welcome with a nightly fee.');
 

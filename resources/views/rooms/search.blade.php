@@ -13,6 +13,7 @@
                 :initialCategoryId="request('category_id')"
                 :initialMinPrice="request('min_price')"
                 :initialMaxPrice="request('max_price')"
+                :initialType="$type ?? request('type', '')"
             />
         </div>
     </div>

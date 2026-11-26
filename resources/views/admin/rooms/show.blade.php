@@ -37,6 +37,12 @@
                     <div>
                         <p class="text-[10px] font-semibold text-[#A68B61] uppercase tracking-[0.2em] mb-3">Room Information</p>
                         <div class="space-y-2.5 text-xs">
+                            <div><span class="text-[#777A72]">Accommodation Type:</span>
+                                <span class="ml-1 px-2.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider
+                                    {{ $room->type === 'cottage' ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-emerald-50 text-emerald-900 border border-emerald-200' }}">
+                                    {{ ucfirst($room->type ?? 'room') }}
+                                </span>
+                            </div>
                             <div><span class="text-[#777A72]">Category:</span> <span class="font-medium text-[#292D29] ml-1">{{ $room->category?->name }}</span></div>
                             <div><span class="text-[#777A72]">Booking Type:</span> <span class="font-medium text-[#292D29] capitalize ml-1">{{ str_replace('_', ' ', $room->booking_type) }}</span></div>
                             <div><span class="text-[#777A72]">Operational Status:</span>
@@ -76,6 +82,27 @@
                             <span class="px-3 py-1.5 bg-[#FAF8F4] border border-[#233D32]/10 text-[#233D32] text-xs rounded-xl font-medium">
                                 ✓ {{ $amenity->name }}
                             </span>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Scoped Add-on Services --}}
+            @if($room->addonServices->isNotEmpty())
+                <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-[0_4px_20px_rgba(35,61,50,0.04)] border border-[#233D32]/10">
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A68B61] block mb-1">Add-on Services</span>
+                    <h3 class="font-serif font-bold text-[#233D32] text-lg mb-4">Configured Add-on Services & Limits</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        @foreach($room->addonServices as $addon)
+                            <div class="p-3.5 bg-[#FAF8F4] border border-[#233D32]/10 rounded-xl flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-xs text-[#292D29]">{{ $addon->name }}</p>
+                                    <p class="text-[11px] text-[#777A72]">₱{{ number_format($addon->price, 2) }} / {{ $addon->charge_type ?? 'item' }}</p>
+                                </div>
+                                <span class="px-2.5 py-1 bg-white border border-[#233D32]/15 text-[#233D32] text-[11px] font-mono font-semibold rounded-lg shadow-2xs">
+                                    Max: {{ $addon->pivot->max_quantity ?? 1 }}
+                                </span>
+                            </div>
                         @endforeach
                     </div>
                 </div>

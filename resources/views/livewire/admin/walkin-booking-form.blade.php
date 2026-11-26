@@ -5,6 +5,7 @@ use App\Events\NewBookingReceived;
 use App\Models\AddonService;
 use App\Models\Booking;
 use App\Models\BookingAddon;
+use App\Models\PaymentMethod;
 use App\Models\Room;
 use App\Models\RoomCategory;
 use App\Models\User;
@@ -134,7 +135,16 @@ new class extends Component {
 
     public function getAvailableAddonsProperty(): EloquentCollection
     {
+        if ($this->selectedRoom && $this->selectedRoom->addonServices()->exists()) {
+            return $this->selectedRoom->addonServices()->where('is_active', true)->get();
+        }
+
         return AddonService::where('is_active', true)->orderBy('sort_order')->get();
+    }
+
+    public function getPaymentMethodsProperty(): EloquentCollection
+    {
+        return PaymentMethod::enabled()->get();
     }
 
     public function getAvailableRoomsProperty(): Collection
@@ -705,10 +715,11 @@ new class extends Component {
                         <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#777A72]">Payment Method</label>
                         <select wire:model="paymentMethod"
                                 class="w-full px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
-                            <option value="cash">Cash Settlement</option>
-                            <option value="card">Credit / Debit Card</option>
-                            <option value="gcash">GCash</option>
-                            <option value="bank_transfer">Bank Transfer</option>
+                            @forelse($this->paymentMethods as $pm)
+                                <option value="{{ $pm->code }}">{{ $pm->name }}</option>
+                            @empty
+                                <option value="cash">Cash Settlement</option>
+                            @endforelse
                         </select>
                     </div>
                 @endif

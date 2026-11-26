@@ -26,6 +26,8 @@ return new class extends Migration
 
         if (Schema::hasTable('booking_discounts') && ! Schema::hasTable('room_discounts')) {
             Schema::rename('booking_discounts', 'room_discounts');
+        } elseif (Schema::hasTable('room_booking_discounts') && ! Schema::hasTable('room_discounts')) {
+            Schema::rename('room_booking_discounts', 'room_discounts');
         } elseif (Schema::hasTable('discounts') && ! Schema::hasTable('room_discounts')) {
             Schema::rename('discounts', 'room_discounts');
         }

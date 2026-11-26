@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'category_id', 'room_number', 'name', 'description', 'gallery',
     'capacity_adults', 'capacity_children', 'allows_pets', 'pet_fee',
-    'base_price', 'floor_number', 'status', 'booking_type', 'is_active',
+    'base_price', 'floor_number', 'status', 'booking_type', 'type', 'is_active',
 ])]
 class Room extends Model
 {
@@ -45,6 +45,13 @@ class Room extends Model
     public function amenities(): BelongsToMany
     {
         return $this->belongsToMany(Amenity::class, 'room_room_amenities', 'room_id', 'amenity_id');
+    }
+
+    public function addonServices(): BelongsToMany
+    {
+        return $this->belongsToMany(AddonService::class, 'room_room_addon_services', 'room_id', 'addon_service_id')
+            ->withPivot('max_quantity')
+            ->withTimestamps();
     }
 
     public function photos(): HasMany

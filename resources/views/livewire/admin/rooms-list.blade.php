@@ -9,6 +9,7 @@ new class extends Component {
     public string $search = '';
     public ?int $categoryId = null;
     public string $statusFilter = '';
+    public string $typeFilter = '';
     public ?string $feedbackMessage = null;
 
     public function updateRoomStatus(int $roomId, string $newStatus): void
@@ -37,6 +38,7 @@ new class extends Component {
             })
             ->when($this->categoryId, fn ($q) => $q->where('category_id', $this->categoryId))
             ->when(filled($this->statusFilter), fn ($q) => $q->where('status', $this->statusFilter))
+            ->when(filled($this->typeFilter), fn ($q) => $q->where('type', $this->typeFilter))
             ->orderBy('room_number')
             ->get();
     }
@@ -74,6 +76,13 @@ new class extends Component {
                 <option value="out_of_service">Out of Service</option>
                 <option value="blocked">Blocked</option>
             </select>
+
+            <select wire:model.live="typeFilter"
+                    class="px-3.5 py-2.5 bg-[#FAF8F4] border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
+                <option value="">All Accommodation Types</option>
+                <option value="room">Rooms</option>
+                <option value="cottage">Cottages</option>
+            </select>
         </div>
 
         <a href="{{ route('admin.rooms.create') }}"
@@ -95,7 +104,7 @@ new class extends Component {
             <table class="w-full text-xs">
                 <thead class="bg-[#FAF8F4] border-b border-[#233D32]/10">
                     <tr>
-                        @foreach(['Unit #', 'Room Name', 'Category', 'Capacity', 'Rate / Night', 'Status', 'Pet Policy', 'Actions'] as $h)
+                        @foreach(['Unit #', 'Room Name', 'Type', 'Category', 'Capacity', 'Rate / Night', 'Status', 'Pet Policy', 'Actions'] as $h)
                             <th class="px-4 py-3.5 text-left text-[10px] font-semibold text-[#777A72] uppercase tracking-[0.14em]">{{ $h }}</th>
                         @endforeach
                     </tr>
@@ -109,6 +118,11 @@ new class extends Component {
                                 @if(!$room->is_active)
                                     <span class="text-[10px] text-stone-400 uppercase tracking-wider">Inactive</span>
                                 @endif
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider {{ $room->type === 'cottage' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300' }}">
+                                    {{ $room->type === 'cottage' ? 'Cottage' : 'Room' }}
+                                </span>
                             </td>
                             <td class="px-4 py-4 text-[#595D58] font-medium">{{ $room->category?->name }}</td>
                             <td class="px-4 py-4 text-[#777A72]">

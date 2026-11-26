@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DiscountController;
 use App\Http\Controllers\Admin\HousekeepingController;
+use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ResortSettingController;
 use App\Http\Controllers\Admin\RoomCategoryController;
 use App\Http\Controllers\Admin\RoomController as AdminRoomController;
@@ -21,7 +22,8 @@ use Illuminate\Support\Facades\Route;
 
 // ─── Public Routes ────────────────────────────────────────────────────────────
 Route::get('/', [RoomSearchController::class, 'index'])->name('home');
-Route::get('/rooms', [RoomSearchController::class, 'search'])->name('rooms.search');
+Route::get('/rooms', [RoomSearchController::class, 'searchRooms'])->name('rooms.search');
+Route::get('/cottages', [RoomSearchController::class, 'searchCottages'])->name('cottages.search');
 Route::get('/rooms/{room}', [RoomSearchController::class, 'show'])->name('rooms.show');
 Route::get('/rooms/{room}/availability', [BookingController::class, 'checkAvailability'])->name('rooms.availability');
 Route::get('/discounts/validate', [BookingController::class, 'validateDiscount'])->name('discounts.validate');
@@ -96,6 +98,8 @@ Route::middleware(['auth', 'role:admin,desk_staff'])->prefix('admin')->name('adm
     // Admin-only Management
     Route::middleware('role:admin')->group(function () {
         Route::resource('rooms', AdminRoomController::class);
+        Route::resource('payment-methods', PaymentMethodController::class)->except(['show']);
+        Route::post('payment-methods/{paymentMethod}/toggle', [PaymentMethodController::class, 'toggleStatus'])->name('payment-methods.toggle');
         Route::resource('discounts', DiscountController::class);
         Route::resource('carousels', CarouselController::class);
         Route::resource('categories', RoomCategoryController::class);

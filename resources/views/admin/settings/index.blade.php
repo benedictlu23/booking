@@ -12,6 +12,9 @@
         <a href="{{ route('admin.amenities.index') }}" class="px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl text-stone-600 bg-white border border-stone-200 hover:bg-[#F7F5EF] hover:text-[#233D32] transition-colors">
             Resort Amenities
         </a>
+        <a href="{{ route('admin.payment-methods.index') }}" class="px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl text-stone-600 bg-white border border-stone-200 hover:bg-[#F7F5EF] hover:text-[#233D32] transition-colors">
+            Payment Methods
+        </a>
     </div>
 
     <div class="max-w-3xl">

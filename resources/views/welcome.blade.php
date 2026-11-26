@@ -378,7 +378,7 @@
                 </div>
 
                 {{-- Direct Navigation Links --}}
-                <div class="pt-2 flex flex-wrap gap-3">
+                <div class="pt-2 flex flex-wrap gap-3 items-center">
                     <a href="https://www.google.com/maps/dir/?api=1&destination={{ $resortLat }},{{ $resortLng }}"
                        target="_blank" rel="noopener noreferrer"
                        class="inline-flex items-center gap-2 px-5 py-3.5 bg-[#233D32] hover:bg-[#172A22] text-[#F7F5EF] font-semibold rounded-xl text-xs uppercase tracking-wider transition-all shadow-xs">
@@ -390,6 +390,12 @@
                        class="inline-flex items-center gap-2 px-5 py-3.5 bg-[#EFEBE1] hover:bg-[#E5E0D4] text-[#233D32] font-semibold rounded-xl text-xs uppercase tracking-wider transition-all border border-[#233D32]/10">
                         <x-icon-waze class="w-5 h-5 text-[#233D32]"/>
                         <span>Open Waze</span>
+                    </a>
+                    <a href="https://www.facebook.com/messages/t/532782233244000"
+                       target="_blank" rel="noopener noreferrer"
+                       class="inline-flex items-center gap-2 px-5 py-3.5 bg-[#EFEBE1] hover:bg-[#E5E0D4] text-[#233D32] font-semibold rounded-xl text-xs uppercase tracking-wider transition-all border border-[#233D32]/10">
+                        <x-icon-messenger class="w-5 h-5 text-[#233D32]"/>
+                        <span>Message on Facebook</span>
                     </a>
                 </div>
             </div>

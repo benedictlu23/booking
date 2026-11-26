@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Booking;
+use App\Models\PaymentMethod;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
@@ -18,10 +20,20 @@ new class extends Component {
         $this->method = $booking->payment_method ?: 'gcash';
     }
 
+    public function getPaymentMethodsProperty(): EloquentCollection
+    {
+        return PaymentMethod::enabled()->get();
+    }
+
+    public function getSelectedMethodProperty(): ?PaymentMethod
+    {
+        return PaymentMethod::where('code', $this->method)->first();
+    }
+
     public function submitProof(): void
     {
         $this->validate([
-            'method' => ['required', 'in:gcash,bank_transfer,cash'],
+            'method' => ['required', 'string', 'exists:room_payment_methods,code'],
             'paymentProof' => ['nullable', 'image', 'max:5120'],
         ]);
 
@@ -68,20 +80,41 @@ new class extends Component {
                 <span class="text-[11px] text-[#777A72] font-light">or settle upon arrival</span>
             </div>
             <p class="text-xs text-[#595D58] font-light leading-relaxed">
-                If paying via mobile wallet or bank deposit, upload your transaction slip below for instant front-desk clearance.
+                If paying via digital wallet or bank deposit, review the official accounts below and upload your receipt screenshot for front-desk clearance.
             </p>
 
-            <div class="grid grid-cols-2 gap-3 text-xs">
-                <div class="p-3 bg-white rounded-xl border border-[#233D32]/10 shadow-2xs">
-                    <p class="font-semibold text-[#233D32]">GCash</p>
-                    <p class="font-mono text-[11px] text-[#292D29] mt-0.5">0912-345-6789</p>
-                    <p class="text-[10px] text-[#777A72]">Agro-Inland Resort</p>
-                </div>
-                <div class="p-3 bg-white rounded-xl border border-[#233D32]/10 shadow-2xs">
-                    <p class="font-semibold text-[#233D32]">BDO Unibank</p>
-                    <p class="font-mono text-[11px] text-[#292D29] mt-0.5">0012-3456-7890</p>
-                    <p class="text-[10px] text-[#777A72]">Agro-Inland Corp.</p>
-                </div>
+            {{-- Accounts & Scannable QR Cards --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                @foreach($this->paymentMethods->where('code', '!=', 'cash') as $pm)
+                    <div class="p-3.5 bg-white rounded-xl border border-[#233D32]/10 shadow-2xs space-y-2">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <p class="font-semibold text-[#233D32]">{{ $pm->name }}</p>
+                                @if($pm->account_number)
+                                    <p class="font-mono text-[11px] font-bold text-[#292D29] mt-0.5">{{ $pm->account_number }}</p>
+                                @endif
+                                @if($pm->account_name)
+                                    <p class="text-[10px] text-[#777A72]">{{ $pm->account_name }}</p>
+                                @endif
+                            </div>
+                            @if($pm->qr_code_path)
+                                <a href="{{ $pm->qr_code_url ?? (str_starts_with($pm->qr_code_path, 'http') ? $pm->qr_code_path : asset('storage/' . $pm->qr_code_path)) }}" download="{{ $pm->code }}-qr-code" title="Download QR"
+                                   class="w-10 h-10 rounded-lg overflow-hidden border border-stone-200 bg-white p-0.5 shrink-0 hover:border-[#233D32] transition-colors block">
+                                    <img src="{{ $pm->qr_code_url ?? (str_starts_with($pm->qr_code_path, 'http') ? $pm->qr_code_path : asset('storage/' . $pm->qr_code_path)) }}" alt="{{ $pm->name }} QR" class="w-full h-full object-contain">
+                                </a>
+                            @endif
+                        </div>
+                        @if($pm->qr_code_path)
+                            <div class="pt-1 border-t border-stone-100 flex items-center justify-between">
+                                <span class="text-[10px] text-[#777A72]">QR Code Available</span>
+                                <a href="{{ $pm->qr_code_url ?? (str_starts_with($pm->qr_code_path, 'http') ? $pm->qr_code_path : asset('storage/' . $pm->qr_code_path)) }}" download="{{ $pm->code }}-qr-code"
+                                   class="text-[10px] font-semibold text-[#233D32] hover:text-[#A68B61] flex items-center gap-1">
+                                    <span>⬇</span> Download QR
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
             </div>
 
             <form wire:submit="submitProof" action="{{ route('booking.payment-proof', $booking) }}" method="POST" enctype="multipart/form-data" class="space-y-3 pt-2">
@@ -89,13 +122,26 @@ new class extends Component {
                 <div class="space-y-1">
                     <label class="block text-[11px] font-semibold uppercase tracking-wider text-[#777A72]">Payment Method</label>
                     <select wire:model.live="method" name="payment_method" class="w-full px-3.5 py-2.5 bg-white border border-[#233D32]/15 rounded-xl text-xs font-medium text-[#292D29] focus:outline-none focus:ring-2 focus:ring-[#233D32]/20 focus:border-[#233D32]">
-                        <option value="gcash">GCash</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                        <option value="cash">Cash on Arrival</option>
+                        @foreach($this->paymentMethods as $pm)
+                            <option value="{{ $pm->code }}">{{ $pm->name }}</option>
+                        @endforeach
                     </select>
                 </div>
 
-                @if($method !== 'cash')
+                @if($this->selectedMethod && $this->selectedMethod->code !== 'cash')
+                    @if($this->selectedMethod->qr_code_path)
+                        <div class="p-3 bg-white border border-[#233D32]/10 rounded-xl flex items-center gap-4">
+                            <img src="{{ $this->selectedMethod->qr_code_url ?? (str_starts_with($this->selectedMethod->qr_code_path, 'http') ? $this->selectedMethod->qr_code_path : asset('storage/' . $this->selectedMethod->qr_code_path)) }}" alt="{{ $this->selectedMethod->name }} QR" class="w-20 h-20 object-contain p-1 border border-stone-200 rounded-lg">
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-[#233D32]">Scan or Save {{ $this->selectedMethod->name }} QR</p>
+                                <a href="{{ $this->selectedMethod->qr_code_url ?? (str_starts_with($this->selectedMethod->qr_code_path, 'http') ? $this->selectedMethod->qr_code_path : asset('storage/' . $this->selectedMethod->qr_code_path)) }}" download="{{ $this->selectedMethod->code }}-qr-code"
+                                   class="inline-flex items-center gap-1 text-[11px] font-bold text-[#A68B61] hover:underline">
+                                    <span>⬇</span> Download QR Image
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="space-y-1">
                         <label class="block text-[11px] font-semibold uppercase tracking-wider text-[#777A72]">Payment Slip Image</label>
                         <input type="file" wire:model="paymentProof" name="payment_proof" accept="image/*"
